@@ -1,0 +1,474 @@
+{
+  "pages": [{
+    "path": "pages/login",
+    "style": {
+      "navigationBarTitleText": "登录"
+    }
+  }, 
+  // {
+  //   "path": "pages/index",
+  //   "style": {
+  //     "navigationBarTitleText": "设备监控管理系统",
+  //     "navigationStyle": "custom"
+  //   }
+  // }, 
+  {
+    "path": "pages/work/index",
+    "style": {
+      "navigationBarTitleText": "工作台"
+    }
+  }, {
+    "path": "pages/mine/index",
+    "style": {
+      "navigationBarTitleText": "我的"
+    }
+  }, {
+    "path": "pages/mine/avatar/index",
+    "style": {
+      "navigationBarTitleText": "修改头像"
+    }
+  }, {
+    "path": "pages/mine/info/index",
+    "style": {
+      "navigationBarTitleText": "个人信息"
+    }
+  }, {
+    "path": "pages/mine/info/edit",
+    "style": {
+      "navigationBarTitleText": "编辑资料"
+    }
+  }, {
+    "path": "pages/mine/pwd/index",
+    "style": {
+      "navigationBarTitleText": "修改密码"
+    }
+  }, {
+    "path": "pages/mine/setting/index",
+    "style": {
+      "navigationBarTitleText": "应用设置"
+    }
+  }, {
+    "path": "pages/mine/help/index",
+    "style": {
+      "navigationBarTitleText": "常见问题"
+    }
+  }, {
+    "path": "pages/mine/about/index",
+    "style": {
+      "navigationBarTitleText": "关于我们"
+    }
+  }, {
+    "path": "pages/common/webview/index",
+    "style": {
+      "navigationBarTitleText": "浏览网页"
+    }
+  }, {
+    "path": "pages/common/textview/index",
+    "style": {
+      "navigationBarTitleText": "浏览文本"
+    }
+  }    ,{
+            "path" : "pages/device/devList/devList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "设备列表",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+		,{
+		          "path" : "pages/device/devMain/devMain",
+		          "style" :                                                                                    
+		          {
+		              "navigationBarTitleText": "设备详情",
+		              "enablePullDownRefresh": false
+		          }
+		          
+		      }
+        ,{
+            "path" : "pages/device/paramValue/paramValue",
+            "style" : {
+                "navigationBarTitleText": "设备参数",
+				"navigationBarBackgroundColor": "#ffffff",
+				"app-plus": {
+					"titleNView": {
+						"buttons": [{
+							"text": "切换设备",
+							"fontSrc": "/static/uni.ttf",
+							"fontSize": "16px",
+							"color": "blue"
+						}]
+					}
+				}
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/upgrade/upgrade",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "软件升级",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/downloadCenter/downloadCenter",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "下载中心",
+                "enablePullDownRefresh": false
+            }
+        }
+		,{
+			"path" : "pages/device/devLog/devLog",
+			"style" :                                                                                    
+			{
+			    "navigationBarTitleText": "修改日志",
+			    "enablePullDownRefresh": false
+			}
+		}
+        
+        ,{
+            "path" : "pages/device/downloadFilePage/downloadFilePage",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "文件下载",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/downloadManage/downloadManage",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "下载管理",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/paramResize/paramResize",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "参数调整",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/timeResize/timeResize",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "时间调整",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/healthStatus/healthStatus",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/programSetting",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "程序设置",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/advancedSetting/advancedSetting",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "高级设置",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/InOut/InOut",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "输入输出",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/InOut/InOutSetting/InOutSetting",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "输入输出端口设置",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/middleParam/middleParam",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "中级参数",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/zjSetting/zjSetting",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "振机设置",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/advancedSetting/plzy/plzy",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "频率增益",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/advancedSetting/mkStatus/mkStatus",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "模块状态",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/advancedSetting/mkStatus/mkStatusParam",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "模块状态详情",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/advancedSetting/motorModel/motorModel",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "马达模式",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/baseParam/baseParam",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "基本参数",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/motorModel/motorModel",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "马达模式",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/timeSetting/timeSetting",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "时间调整",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/setDou/setDou",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "指定斗",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/AFC/AFC",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "AFC设置",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/advancedSetting/systemParam/systemParam",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "系统参数",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/InOut/InOutSetting/InOutSetting",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "输入输出端口设置",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/programSetting/setDou/setDouParam",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "指定斗参数",
+                "enablePullDownRefresh": false
+            }
+            
+        } ,{
+            "path" : "pages/device/advancedSetting/motorModel/originCheck",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "原点检测",
+                "enablePullDownRefresh": false
+            }
+        }, {
+            "path" : "pages/device/advancedSetting/motorModel/motorModelParam",
+			"style" : {
+			    "navigationBarTitleText": "设备参数",
+				"enablePullDownRefresh": false,
+				"navigationBarBackgroundColor": "#ffffff",
+				"app-plus": {
+					"titleNView": {
+						"buttons": [{
+							"text": "",
+							"fontSrc": "/static/uni.ttf",
+							"fontSize": "16px",
+							"color": "blue"
+						}]
+					}
+				}
+			}
+        } ,{
+            "path" : "pages/device/advancedSetting/motorModel/motorSubModel",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "马达模式",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/InOut/InOutPort/InOutPort",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "输入输出端口选择",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/workModel/workModel",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/manualDebug/manualDebug",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "手动调试",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/calibration/calibration",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "校准",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/alarm/alarm",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "故障处理",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/proList/proList",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "程序列表",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/statistic/statistic",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "统计",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+        ,{
+            "path" : "pages/device/zeroOper/zeroOper",
+            "style" :                                                                                    
+            {
+                "navigationBarTitleText": "置零",
+                "enablePullDownRefresh": false
+            }
+            
+        }
+    ],
+  "tabBar": {
+    "color": "#000000",
+    "selectedColor": "#000000",
+    "borderStyle": "white",
+    "backgroundColor": "#ffffff",
+    "list": [
+		// {
+  //       "pagePath": "pages/index",
+  //       "iconPath": "static/images/tabbar/home.png",
+  //       "selectedIconPath": "static/images/tabbar/home_.png",
+  //       "text": "首页"
+  //     }, 
+	  {
+        "pagePath": "pages/work/index",
+        "iconPath": "static/images/tabbar/work.png",
+        "selectedIconPath": "static/images/tabbar/work_.png",
+        "text": "工作台"
+      }, {
+        "pagePath": "pages/mine/index",
+        "iconPath": "static/images/tabbar/mine.png",
+        "selectedIconPath": "static/images/tabbar/mine_.png",
+        "text": "我的"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "RuoYi",
+    "navigationBarBackgroundColor": "#FFFFFF"
+  }
+}

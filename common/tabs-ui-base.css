@@ -1,0 +1,44 @@
+@CHARSET "UTF-8";
+
+body,ul,p,h1,h2,h3,h4,h5,h6,input,textarea{
+	margin: 0;
+}
+ul,td,input,textarea{
+	padding: 0;
+}
+ul{
+	list-style: none;
+}
+input,textarea{
+	border: none;
+	color: inherit;
+	outline: none;
+	font-size: inherit;
+	font-family: inherit;
+	vertical-align: middle;
+	-webkit-appearance: none;
+	background-color: transparent;
+}
+textarea{
+	resize: none;
+}
+img{
+	border: none;
+	vertical-align: middle;
+}
+a{
+	color: inherit;
+	outline: none;
+	text-decoration: none;
+}
+h1,h2,h3,h4,h5,h6{
+	font-size: inherit;
+	font-weight: normal;
+}
+table{
+	border-spacing: 0;
+	border-collapse: collapse;
+}
+*, :after, :before {
+    box-sizing: border-box;
+}

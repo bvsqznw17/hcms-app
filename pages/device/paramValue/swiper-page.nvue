@@ -1,0 +1,227 @@
+<template>
+	<view class="uni-swiper-page">
+
+		<!-- <view :style="{height: swHeight + 'px'}" ref="form"> -->
+		<scroll-view :scroll-y="true" :show-scrollbar="true" :scroll="false">
+			<uni-forms v-if="page.tabData && page.tabData.length > 0" 
+				label-position="left" labelAlign="center" labelWidth="375upx">
+				<uni-forms-item style="margin-right: 10px;" v-for="(it,idx) in page.tabData" :key="idx"
+					:name="it.paramName" :label="it.paramName">
+					<uni-easyinput class="inputCss" type="text" v-model="it.paramValue" @focus="focusInput(it.id)"
+						@change="changeInput(it)" />
+				</uni-forms-item>
+			</uni-forms>
+			<!-- 暂无数据页面 -->
+			<view class="noData" v-if="!page.tabData || page.tabData.length == 0">
+				<text>暂无数据</text>
+			</view>
+		</scroll-view>
+		<!-- </view> -->
+
+	</view>
+</template>
+
+<script>
+	import {
+		listParamValue,
+		updateParamValue
+	} from "@/api/device/paramValue.js";
+
+	import {
+		deepCopy
+	} from "@/utils/util.js"
+
+	export default {
+		props: {
+			pid: {
+				type: [Number, String],
+				default: ''
+			},
+			swHeight: {
+				type: [Number],
+				default: 0
+			},
+			page: {
+				type: null
+			}
+		},
+		data() {
+			return {
+				formData: {},
+				scrollable: true,
+				dataList: [],
+				queryParams: {
+					ip: '192.168.1.111',
+					paramSubType: 1
+				},
+				updIdMap: {},
+				strValidParamName: ["产品名称"],
+				// todo 匹配一个tabData，用来做副本
+				preData: {}
+			}
+		},
+		created() {
+			setTimeout(() => {
+				// console.log(this.page.tabData)
+				if (this.page.tabData) {
+					this.preData = deepCopy(this.page.tabData)
+				}
+			}, 500)
+		},
+		mounted() {},
+		methods: {
+			loadData() {
+				// 首次激活时被调用
+				this.queryParams.paramSubType = this.pid
+				listParamValue(this.queryParams).then(res => {
+					// 遍历dataList，取其小数点位数进行格式化
+					this.dataList = res.rows.map((item, value) => {
+						if (item.paramName.indexOf(this.strValidParamName) == -1) {
+							item.paramValue = (item.paramValue / Math.pow(10, item.decimalNum)).toFixed(
+								item.decimalNum)
+						}
+						return item
+					})
+					// this.dataList = res.rows;
+				})
+			},
+			clear() {
+				// 释放数据时被调用，参考 swiper-list 缓存配置
+				this.dataList.length = 0;
+			},
+			// input聚焦事件
+			focusInput(id) {
+				// 监听到修改之后将参数加入到待修改列表
+				this.updIdMap[id] = id
+			},
+			// input修改事件
+			changeInput(it) {
+				// 校验修改的值是否超出范围并提示
+				// 如果和原值相等，就不进行比较
+				let backFlag = false
+				this.preData.map((item, index) => {
+					if (item.paramName == it.paramName && it.paramValue == item.paramValue) {
+						backFlag = true
+					}
+				})
+				if (backFlag) return;
+				console.log(it.paramValue)
+				console.log(this.preData)
+				console.log(this.page.tabData)
+				if (it.paramName.indexOf(this.strValidParamName) == -1) {
+					let min = (it.minV / Math.pow(10, it.decimalNum)).toFixed(it
+						.decimalNum)
+					let max = (it.maxV / Math.pow(10, it.decimalNum)).toFixed(it
+						.decimalNum)
+					let pv = parseInt(it.paramValue)
+					if (pv != 0 && !pv || pv > max || pv < min) {
+						uni.showToast({
+							title: it.paramName + '取值范围在' + min + '~' + max,
+							icon: 'none',
+							duration: 3000
+						})
+						// 将修改的值改回原来的值
+						console.log('修改回原值')
+						this.preData.map((item, index) => {
+							if (item.paramName == it.paramName) {
+								it.paramValue = item.paramValue
+							}
+						})
+						this.page.tabData = this.page.tabData.map((item, index) => {
+							if (item.paramName == it.paramName) {
+								item.paramValue = it.paramValue
+								console.log(item)
+							}
+							return item
+						})
+					} else {
+						this.preData = deepCopy(this.page.tabData)
+					}
+					console.log(this.page.tabData)
+				}
+			},
+			// 保存页面数据
+			savePageData(data) {
+				// console.log('savePageData')
+				let tabData = data || this.page.tabData
+				// let updIdMap = updIdMap || this.updIdMap
+				// console.log(tabData)
+				// 遍历tabData，判断是否在updIdMap中，在就修改
+				let keys = Object.keys(this.updIdMap)
+				console.log(keys)
+				let len = keys.length
+				let num = 0
+				tabData.map((it, idx) => {
+					// console.log(it.id in this.updIdMap)
+					if (it.id in this.updIdMap) {
+						// 对小数点反格式化后再进行存储
+						if (it.paramName.indexOf(this.strValidParamName) == -1) {
+							it.paramValue = this.trimPoint(it.paramValue)
+						}
+						// it.minV = this.trimPoint(it.minV)
+						// it.maxV = this.trimPoint(it.maxV)
+						console.log('call function')
+						updateParamValue(it).then(res => {
+							num++
+							console.log(res)
+							// 之后再格式化作为显示
+							if (it.paramName.indexOf(this.strValidParamName) == -1) {
+								it.paramValue = (it.paramValue / Math.pow(10, it.decimalNum)).toFixed(it
+									.decimalNum)
+							}
+							if (num == len) {
+								console.log('clear')
+								this.updIdMap = {}
+								uni.showModal({
+									content: '保存成功',
+									showCancel: false
+								})
+								// this.$modal.msgSuccess("保存成功");
+							}
+						})
+					}
+				})
+			},
+			// 过滤小数点转为整数
+			trimPoint(v) {
+				return parseInt(String(v).replace('.', '')) | v
+			},
+		}
+	}
+</script>
+
+<style scoped>
+	.uni-swiper-page {
+		/*        flex: 1;
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0; */
+	}
+
+	.list {
+		flex: 1;
+		background-color: #ebebeb;
+	}
+
+	.list-item {
+		margin-left: 12px;
+		margin-right: 12px;
+		margin-top: 12px;
+		padding: 20px;
+		background-color: #fff;
+		border-radius: 5px;
+	}
+
+	.loading {
+		height: 20px;
+	}
+
+	.inputCss {}
+
+	.noData {
+		display: flex;
+		align-items: center;
+	}
+</style>

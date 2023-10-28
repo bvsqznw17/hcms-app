@@ -1,0 +1,220 @@
+<template>
+	<view class="uni-swiper-page">
+
+		<scroll-view :scroll-y="true" :show-scrollbar="true" :scroll="false">
+			<uni-forms v-if="page && page.length > 0" 
+				label-position="left" labelAlign="center" labelWidth="375upx">
+				<uni-forms-item style="margin-right: 10px;" v-for="(it,idx) in page" :key="idx"
+					:name="it.paramName" :label="it.paramName">
+					<uni-easyinput class="inputCss" type="text" v-model="it.paramValue"
+						@change="changeInput(it)" />
+				</uni-forms-item>
+			</uni-forms>
+			<!-- 暂无数据页面 -->
+			<view class="noData" v-if="!page || page.length == 0">
+				<text>暂无数据</text>
+			</view>
+		</scroll-view>
+		<!-- </view> -->
+
+	</view>
+</template>
+
+<script>
+	import {
+		listParamValue,
+		updateParamValue
+	} from "@/api/device/paramValue.js";
+
+	import {
+		deepCopy, formatNumber
+	} from "@/utils/util.js"
+
+	export default {
+		props: {
+			pid: {
+				type: [Number, String],
+				default: ''
+			},
+			swHeight: {
+				type: [Number],
+				default: 0
+			},
+			page: {
+				type: null
+			}
+		},
+		data() {
+			return {
+				formData: {},
+				scrollable: true,
+				queryParams: {
+					paramSubType: 1
+				},
+				updIdMap: {},
+				// 匹配一个tabData，用来做副本
+				preData: {}
+			}
+		},
+		created() {
+			setTimeout(() => {
+				// console.log(this.page)
+				if (this.page) {
+					this.preData = deepCopy(this.page)
+				}
+			}, 500)
+		},
+		mounted() {},
+		methods: {
+			// input修改事件
+			changeInput(it) {
+				// 校验修改的值是否超出范围并提示
+				// 如果和原值相等，就不进行比较
+				let backFlag = false
+				this.preData.map((item, index) => {
+					if (item.paramName == it.paramName && it.paramValue == item.paramValue) {
+						backFlag = true
+					}
+				})
+				if (backFlag) return;
+				console.log(it.paramValue)
+				console.log(this.preData)
+				console.log(this.page)
+				if (it.paramName.indexOf(this.strValidParamName) == -1) {
+					let min = it.minV
+					let max = it.maxV
+					let pv = parseInt(it.paramValue)
+					if (pv != 0 && !pv || pv > max || pv < min) {
+						uni.showToast({
+							title: it.paramName + '取值范围在' + min + '~' + max,
+							icon: 'none',
+							duration: 3000
+						})
+						// 将修改的值改回原来的值
+						console.log('修改回原值')
+						this.preData.map((item, index) => {
+							if (item.paramName == it.paramName) {
+								it.paramValue = item.paramValue
+							}
+						})
+						this.page = this.page.map((item, index) => {
+							if (item.paramName == it.paramName) {
+								item.paramValue = it.paramValue
+								console.log(item)
+							}
+							return item
+						})
+					} else {
+						this.updIdMap[it.regAddr] = it.regAddr
+						this.preData = deepCopy(this.page)
+					}
+					console.log(this.page)
+				}else{
+					this.updIdMap[it.regAddr] = it.regAddr
+					this.preData = deepCopy(this.page)
+				}
+			},
+			// 保存页面数据
+			savePageData(data) {
+				// console.log('savePageData')
+				let tabData = data || this.page
+				// let updIdMap = updIdMap || this.updIdMap
+				// console.log(tabData)
+				// 遍历tabData，判断是否在updIdMap中，在就修改
+				let keys = Object.keys(this.updIdMap)
+				console.log(keys)
+				let len = keys.length
+				let num = 0
+				tabData.map((it, idx) => {
+					// console.log(it.id in this.updIdMap)
+					if (it.regAddr in this.updIdMap) {
+						// 对小数点反格式化后再进行存储
+						console.log(it.paramValue)
+						it.paramValue = parseInt(it.paramValue * Math.pow(10, it.decimalNum))
+						console.log(it.paramValue)
+						console.log(it)
+						updateParamValue(it).then(res => {
+							num++
+							console.log(res)
+							// 之后再格式化作为显示
+							if (it.paramName.indexOf(this.strValidParamName) == -1) {
+								it.paramValue = formatNumber(it.paramValue, it.decimalNum)
+							}
+							if (num == len) {
+								console.log('clear')
+								this.updIdMap = {}
+								uni.showModal({
+									content: '保存成功',
+									showCancel: false
+								})
+								// this.$modal.msgSuccess("保存成功");
+								this.checkMaxSpeed()
+							}
+						})
+					}
+				})
+			},
+			// 过滤小数点转为整数
+			trimPoint(v) {
+				return parseInt(String(v).replace('.', '')) | v
+			},
+			// 检查最大速度是否是0，如果最大速度是0，修改同一个对象中的'角度'字段：paramName='停顿时间',decimalNum=0
+			checkMaxSpeed() {
+				let maxSpeed = this.page.filter(it => it.paramName.substring(0,4) == '最大速度')[0]
+				if (maxSpeed.paramValue == 0) {
+					let angle = this.page.filter(it => it.paramName.substring(0,2) == '角度')[0]
+					angle.paramName = '停顿时间'
+					angle.decimalNum = 0
+					angle.maxV = 9999
+					angle.minV = 0
+					angle.paramValue = angle.paramValue * 10
+				} else {
+					let angle = this.page.filter(it => it.paramName.substring(0,4) == '停顿时间')[0]
+					angle.paramName = '角度'
+					angle.decimalNum = 1
+					angle.maxV = 3600
+					angle.minV = -3600
+					// deal with decimalNum
+					angle.paramValue = (angle.paramValue / Math.pow(10, angle.decimalNum)).toFixed(angle
+						.decimalNum)
+				}
+			},
+		}
+	}
+</script>
+
+<style scoped>
+	.uni-swiper-page {
+		/*        flex: 1;
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0; */
+	}
+
+	.list {
+		flex: 1;
+		background-color: #ebebeb;
+	}
+
+	.list-item {
+		margin-left: 12px;
+		margin-right: 12px;
+		margin-top: 12px;
+		padding: 20px;
+		background-color: #fff;
+		border-radius: 5px;
+	}
+
+	.loading {
+		height: 20px;
+	}
+
+	.inputCss {}
+
+	.noData {
+		display: flex;
+		align-items: center;
+	}
+</style>

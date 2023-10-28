@@ -123,16 +123,10 @@ export default {
       isOperationMode: false,
     };
   },
-  onLoad(opt) {
-    console.log(opt);
+  onLoad() {
     this.getList();
-    this.switchMode("monitoring");
   },
   onShow() {
-    // var timer = setTimeout(() => {
-    // 	this.getList()
-    // 	clearTimeout(timer)
-    // }, 500);
     // 初始化防抖函数
     this.reqDebounce = debounce(this.getSearchList, 500);
   },
@@ -239,24 +233,6 @@ export default {
       this.getList();
       this.inputVal = "";
       this.inputShowed = false;
-    },
-    // 跳转到页面
-    skipTo(page, item) {
-      // 在点击跳转到页面之前，先获取设备的相关参数并设置到缓存中
-      this.getDevParams(item);
-      uni.setStorageSync("devIp", item.ip);
-      uni.setStorageSync("devName", item.devName);
-      uni.setStorageSync("status", item.status);
-      this.$tab.navigateTo(
-        "/pages/device/" +
-          page +
-          "/" +
-          page +
-          "?devName=" +
-          item.devName +
-          "&status=" +
-          item.status
-      );
     },
     // 获取设备参数并设置到缓存中
     getDevParams(item) {

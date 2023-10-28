@@ -147,6 +147,7 @@ import {
   writeCmd,
   getPanelData,
   readParam,
+  readParams,
   getRunStatus,
   getDouStatus,
 } from "@/api/device/business.js";
@@ -192,6 +193,20 @@ export default {
       showOperateBtn: true, // 控制是否显示操作按钮
       showMenuBtn: true, // 控制是否显示菜单按钮
       inDevelopPageList: ["camera", "statistic"],
+      panelParamKeys: [
+        "sys_prm_ids",
+        "prm_SetWeight",
+        "prm_SetWeight1",
+        "prm_SetWeight2",
+        "prm_name",
+        "cmb_speed",
+        "cmb_Dww",
+        "prm_speed",
+        "sys_Unit",
+        "prm_AFCMode",
+        "cmb_cbtype",
+        "cmb_Weight",
+      ],
       btnCtrl: {
         // 控制按钮是否禁用
         run: false,
@@ -218,51 +233,33 @@ export default {
     // });
 
     // 测试readParam接口，读取几个特征参数
-    let testList = [
-      "prm_name",
-      "prm_speed",
-      "prm_WorP",
-      "prm_SetWeight",
-      "prm_SetWeight1",
-      "prm_SetWeight2",
-      "prm_PCL",
-      "prm_DWW",
-      "prm_DWW_UpLimit",
-      "prm_DWW_DownLimit",
-      "prm_TWW",
-    ];
-    for (let i = 0; i < testList.length; i++) {
-      readParam({
-        devName: this.devName,
-        paramKey: testList[i],
-      }).then((res) => {
-        console.log(res);
-      });
-    }
+    readParam({
+      devName: this.devName,
+      paramKey: "doustatus",
+    }).then((res) => {
+      console.log(res);
+    });
 
     // 获取面板的数据
-    // getPanelData({
-    //   devName: this.devName,
-    // }).then((res) => {
-    //   console.log(res);
-    //   this.realtimeWeight = res.data.weight;
-    //   this.weight_unit = res.data.unit;
-    //   this.afc = res.data.afc;
-    //   // 处理数据：获取得到的数据res.data是一个字典类型，需要转为parameters的格式，把它的key转为label,value转为value
-    //   const tempParameters = Object.keys(res.data).map((key) => {
-    //     return { label: key, value: res.data[key] };
-    //   });
-    //   console.log(tempParameters);
-    //   // 我们只需要前9个参数
-    //   const parameters_ = JSON.parse(
-    //     JSON.stringify(tempParameters.slice(0, 9))
-    //   );
-    //   // // 转置
-    //   // [parameters_[1], parameters_[3]] = [parameters_[3], parameters_[1]];
-    //   // [parameters_[2], parameters_[6]] = [parameters_[6], parameters_[2]];
-    //   // this.parameters = parameters_;
-    //   console.log(this.parameters);
-    // });
+    getPanelData({
+      devName: this.devName,
+    }).then((res) => {
+      console.log(res);
+      this.realtimeWeight = res.data.weight == null ? "0.0" : res.data.weight;
+      this.weight_unit = res.data.sys_unit;
+      this.afc = res.data.afc;
+      // 处理数据：获取得到的数据res.data是一个字典类型，需要转为parameters的格式，把它的key转为label,value转为value
+      const tempParameters = Object.keys(res.data).map((key) => {
+        return { label: key, value: res.data[key] };
+      });
+      console.log(tempParameters);
+      // 我们只需要前9个参数
+      const parameters_ = JSON.parse(
+        JSON.stringify(tempParameters.slice(0, 9))
+      );
+      this.parameters = parameters_;
+      console.log(this.parameters);
+    });
   },
   onShow() {},
   // 其他组件生命周期钩子和方法

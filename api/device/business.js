@@ -41,6 +41,16 @@ export function readParam(query) {
   })
 }
 
+// 从设备读取一组参数
+export function readParams(query) {
+  return request({
+    url: '/device/business/readParams',
+    method: 'post',
+    params: query,
+    timeout: 10000
+  })
+}
+
 // 获取设备的运行状态信息
 export function getRunStatus(query) {
   return request({

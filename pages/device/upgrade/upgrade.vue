@@ -39,8 +39,8 @@
                   <text style="">{{item.devName}}</text>
                 </view>
                 <view>
-                  <text class="_label">软件名称：</text>
-                  <text>{{item.name}}</text>
+                  <text class="_label">设备型号：</text>
+                  <text>{{item.devModel}}</text>
                 </view>
                 <view>
                   <text class="_label">当前版本：</text>
@@ -128,12 +128,13 @@ export default {
     };
   },
   onLoad(opt) {
-    console.log(opt);
+    // 获取devName和status
+    let devName = uni.getStorageSync("devName");
+    let status = uni.getStorageSync("status");
+
     this.userModel = uni.getStorageSync("userModel");
     // 设置在线状态
-    this.online = opt.status == "1" ? true : false;
-    let devName = opt.devName;
-    console.log(devName);
+    this.online = status == "1" ? true : false;
     this.queryParams.devName = devName;
     this.getList();
   },
@@ -161,7 +162,6 @@ export default {
       if (this.listData.length > 0) {
         this.queryParams.pageNum += 10;
       }
-      console.log(this.queryParams);
       listUpgrade(this.queryParams).then((response) => {
         console.log(response);
         let list = response.rows;
@@ -170,7 +170,6 @@ export default {
           e.online = this.online;
           e.statusText = this.online ? "在线" : "离线";
         });
-        console.log(this.queryParams.pageNum + "-----" + response.total);
         if (this.queryParams.pageNum <= response.total) {
           this.listData = this.reload ? list : this.listData.concat(list);
           this.status = "more";
@@ -243,47 +242,26 @@ export default {
     btnDo(code, item) {
       if (this.checkMonitor()) return;
       uni.setStorageSync("curDev", item.devName);
-      if (code == "upgrade") {
-        listVersion({
-          name: item.name,
-          type: "up",
-        }).then((res) => {
-          if (res.rows.length > 0) {
-            this.versionObjList = res.rows.map((it, idx) => {
-              it.devName = item.devName;
-              it.ip = item.ip;
-              it.id = item.id;
-              return it;
-            });
-            this.versionList = res.rows.map((it, idx) => {
-              return it.version;
-            });
-            // 先设置upParam为第一个
-            this.upParam = this.versionObjList[0];
-          }
-          this.$refs.pb1.open();
-        });
-      } else {
-        listVersion({
-          language: item.language,
-          type: "lan",
-        }).then((res) => {
-          if (res.rows.length > 0) {
-            this.languageObjList = res.rows.map((it, idx) => {
-              it.devName = item.devName;
-              it.ip = item.ip;
-              it.id = item.id;
-              return it;
-            });
-            this.languageList = res.rows.map((it, idx) => {
-              return it.version;
-            });
-            // 先设置upParam为第一个
-            this.upParam = this.versionObjList[0];
-          }
-          this.$refs.pb2.open();
-        });
-      }
+      const type = code === "upgrade" ? "up" : "lan";
+      listVersion({
+        devModel: item.devModel,
+        type: type,
+      }).then((res) => {
+        if (res.rows.length > 0) {
+          this.versionObjList = res.rows.map((it, idx) => {
+            it.devName = item.devName;
+            it.ip = item.ip;
+            it.id = item.id;
+            return it;
+          });
+          this.versionList = res.rows.map((it, idx) => {
+            return it.version;
+          });
+          // 先设置upParam为第一个
+          this.upParam = this.versionObjList[0];
+        }
+        this.$refs.pb1.open();
+      });
     },
     bindPickerChange1(e) {
       let index = e.detail.value;

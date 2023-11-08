@@ -279,7 +279,7 @@ export default {
       console.log(this.upParam);
       // 检测设备是否在线
       checkDevStatus({
-        devName: this.upParam.devName,
+        devId: uni.getStorageSync("devId"),
       }).then((res) => {
         console.log(res);
         if (res.msg != 200) {
@@ -310,8 +310,7 @@ export default {
     },
     confirmLan() {
       checkDevStatus({
-        devName: this.upParam.devName,
-        userModel: this.userModel,
+        devId: uni.getStorageSync("devId"),
       }).then((res) => {
         if (res.rows.length > 0 && res.rows[0].status == 0) {
           uni.showToast({

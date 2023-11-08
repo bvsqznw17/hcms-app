@@ -71,10 +71,20 @@ export function getPanelData(query) {
   })
 }
 
-// 获取斗状态
-export function getDouStatus(query) {
+// 获取设备系统配置信息
+export function getSysConfig(query) {
   return request({
-    url: '/device/business/getDouStatus',
+    url: '/device/business/getSysConfig',
+    method: 'get',
+    params: query,
+    timeout: 10000
+  })
+}
+
+// 获取命令执行的结果
+export function getCmdResult(query) {
+  return request({
+    url: '/device/business/getCmdResult',
     method: 'get',
     params: query,
     timeout: 10000

@@ -87,6 +87,10 @@
         </view>
       </block>
     </view>
+    <!-- 连接码验证弹窗 -->
+    <uni-popup ref="popup" type="dialog">
+      <uni-popup-dialog mode="input" title="连接码验证" placeholder="请输入连接码" @confirm="dialogConfirm"></uni-popup-dialog>
+    </uni-popup>
     <uni-load-more :status="status" :icon-size="16" :content-text="contentText" />
   </view>
 </template>
@@ -95,6 +99,8 @@
 import { dateUtils, debounce } from "../../../utils/util.js";
 import { listDevMsgEx } from "@/api/device/devMsg.js";
 import { listSettings } from "@/api/device/sysSettings.js";
+import { verifyCcode, updDevCcode } from "@/api/device/devCcode.js";
+import { checkDevStatus } from "@/api/device/business.js";
 
 export default {
   data() {
@@ -121,6 +127,7 @@ export default {
       loadAll: false,
       isMonitoringMode: true,
       isOperationMode: false,
+      devId: null,
     };
   },
   onLoad() {
@@ -260,13 +267,77 @@ export default {
         this.isOperationMode = true;
         uni.setStorageSync("userModel", 2);
       }
+      // 检测设备是否在线
+      checkDevStatus({
+        devId: uni.getStorageSync("devId"),
+      }).then((res) => {
+        console.log(res);
+        if (res.msg != 200) {
+          if (mode != "monitoring") {
+            uni.showToast({
+              title: "设备离线，请切换至监控模式",
+            });
+            return false;
+          }
+        }
+        this.switchModeLogic(item);
+      });
+    },
+    // 选择模式之后的逻辑
+    switchModeLogic(item) {
+      this.devId = item.id;
       // 在点击跳转到页面之前，先获取设备的相关参数并设置到缓存中
       this.getDevParams(item);
+      uni.setStorageSync("devId", item.id);
       uni.setStorageSync("devIp", item.ip);
       uni.setStorageSync("devName", item.devName);
       uni.setStorageSync("status", item.status);
-      // 跳转到主控界面
+      // 连接码验证
+      this.verifyCcode(item);
+    },
+    // 跳转到主控界面
+    skipToMain() {
       this.$tab.navigateTo("/pages/device/devMain/devMain");
+    },
+    // 验证连接码
+    verifyCcode(item) {
+      verifyCcode({
+        devId: this.devId,
+      }).then((res) => {
+        console.log(res);
+        if (res.data == 1) {
+          this.skipToMain();
+        } else {
+          this.openPopup();
+        }
+      });
+    },
+    // 打开连接码验证弹窗
+    openPopup() {
+      this.$refs.popup.open();
+    },
+    // 连接码确认按钮点击
+    dialogConfirm(e) {
+      verifyCcode({
+        devId: this.devId,
+        ccode: e,
+      }).then((res) => {
+        console.log(res);
+        if (res.data == 1) {
+          uni.showToast({
+            title: "验证成功",
+          });
+          this.skipToMain();
+        } else {
+          uni
+            .showToast({
+              title: "连接码错误",
+            })
+            .then(() => {
+              this.openPopup();
+            });
+        }
+      });
     },
   },
 };

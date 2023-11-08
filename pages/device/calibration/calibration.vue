@@ -78,6 +78,13 @@
 </template>
 
 <script>
+import {
+  writeCmd,
+  readParam,
+  getRunStatus,
+  getCmdResult,
+} from "@/api/device/business.js";
+import { ctrlno } from "@/utils/devConstant.js";
 export default {
   data() {
     return {
@@ -104,23 +111,48 @@ export default {
       ],
       zdOption: "1", // 振动选项
       calibrationOption: "1", // 标定选项
+      boxIndex: 0, // 选中的盒子
     };
   },
   methods: {
+    // 向设备发送指令
+    sendCmd(cmd, cmdParam) {
+      writeCmd({
+        devName: uni.getStorageSync("devName"),
+        cmd: cmd,
+        cmdParam: cmdParam,
+      }).then((res) => {
+        console.log(res);
+        if (res.code == 200) {
+          uni.showToast({
+            title: "指令下发成功",
+          });
+        } else {
+          uni.showToast({
+            title: "指令下发失败",
+          });
+        }
+      });
+    },
     showMenuBtns() {
       // 控制显示/隐藏菜单按钮的方法
     },
+    // 置零操作方法
     zero() {
-      // 置零操作方法
       this.InDeveloping();
+      const douNumber = this.boxIndex + 1;
+      this.sendCmd(ctrlno.CTL_DOU_CALIZERO, douNumber);
     },
+    // 满度操作方法
     full() {
-      // 满度操作方法
       this.InDeveloping();
+      const douNumber = this.boxIndex + 1;
+      this.sendCmd(ctrlno.CTL_DOU_CALIFULL, douNumber);
     },
     radioChange1(e) {
       console.log(e);
       this.zdOption = e.detail.value;
+      this.sendCmd(ctrlno.CTL_SEZ, e);
     },
     radioChange2(e) {
       console.log(e);
@@ -138,6 +170,9 @@ export default {
         title: "正在开发中，该页面功能暂不可用",
         icon: "none",
       });
+    },
+    clickBox(index) {
+      this.boxIndex = index;
     },
   },
 };

@@ -40,23 +40,6 @@
       </view>
     </view>
 
-    <!-- 中部 -->
-    <view class="middle-section" v-show="showOperateBtn">
-      <!-- 内置按钮区域 -->
-      <!-- 多个按钮放在容器中，使用 v-show 控制显示与隐藏 -->
-      <view class="button-area">
-        <button class="action-btn" @click="mainOper('run')" :disabled="btnCtrl['run']">
-          运行
-        </button>
-        <button class="action-btn" @click="mainOper('stop')" :disabled="btnCtrl['stop']">
-          停止
-        </button>
-        <button class="action-btn" @click="mainOper('lack_stop')" :disabled="btnCtrl['lack_stop']">
-          缺料停机
-        </button>
-      </view>
-    </view>
-
     <!-- 底部 -->
     <view class="bottom-section" v-show="showBuiltInBtn">
       <!-- 第一行按钮 -->
@@ -97,7 +80,7 @@
     </view>
 
     <!-- 添加分隔区域 -->
-    <view class="separator"></view>
+    <!-- <view class="separator"></view> -->
 
     <!-- 菜单按钮 -->
     <view class="bottom-section" v-show="showMenuBtn">
@@ -129,14 +112,29 @@
     <!-- 添加分隔区域 -->
     <view class="separator"></view>
 
+    <!-- 中部 -->
+    <view class="middle-section" v-show="showOperateBtn">
+      <!-- 内置按钮区域 -->
+      <!-- 多个按钮放在容器中，使用 v-show 控制显示与隐藏 -->
+      <view class="button-area">
+        <button class="action-btn" @click="mainOper('run')" :disabled="btnCtrl['run']">
+          运行
+        </button>
+        <button class="action-btn" @click="mainOper('stop')" :disabled="btnCtrl['stop']">
+          停止
+        </button>
+        <button class="action-btn" @click="mainOper('lack_stop')" :disabled="btnCtrl['lack_stop']">
+          缺料停机
+        </button>
+      </view>
+    </view>
+
     <!-- 最底部 -->
     <view class="footer">
-      <!-- 左侧按钮 -->
-      <button class="action-btn left-btn" @click="showBuiltInBtns()">菜单一</button>
 
-      <!-- 右侧按钮 -->
+      <!-- 菜单按钮 -->
       <button class="action-btn right-btn" @click="showMenuBtns()" :disabled="btnCtrl['menu']">
-        菜单二
+        菜单
       </button>
     </view>
   </view>
@@ -147,9 +145,8 @@ import {
   writeCmd,
   getPanelData,
   readParam,
-  readParams,
   getRunStatus,
-  getDouStatus,
+  getSysConfig,
 } from "@/api/device/business.js";
 import { ctrlno } from "@/utils/devConstant.js";
 export default {
@@ -191,7 +188,7 @@ export default {
       ],
       showBuiltInBtn: true, // 控制是否显示内置按钮
       showOperateBtn: true, // 控制是否显示操作按钮
-      showMenuBtn: true, // 控制是否显示菜单按钮
+      showMenuBtn: false, // 控制是否显示菜单按钮
       inDevelopPageList: ["camera", "statistic"],
       panelParamKeys: [
         "sys_prm_ids",
@@ -220,46 +217,28 @@ export default {
         timeSetting: false,
         camera: false,
       },
+      sysConfig: {}, // 系统配置
+      runStatus: {}, // 设备运行状态
     };
   },
   onLoad() {
     // 获取devName等信息
     this.devName = uni.getStorageSync("devName");
-    // 获取秤的数据，包括14个组合秤
-    // getDouStatus({
-    //   devName: this.devName,
-    // }).then((res) => {
-    //   console.log(res);
-    // });
 
-    // 测试readParam接口，读取几个特征参数
-    readParam({
-      devName: this.devName,
-      paramKey: "doustatus",
-    }).then((res) => {
-      console.log(res);
-    });
+    // 获取系统信息并存储到缓存中
+    this.getDeviceInfoAndStore();
 
-    // 获取面板的数据
-    getPanelData({
-      devName: this.devName,
-    }).then((res) => {
-      console.log(res);
-      this.realtimeWeight = res.data.weight == null ? "0.0" : res.data.weight;
-      this.weight_unit = res.data.sys_unit;
-      this.afc = res.data.afc;
-      // 处理数据：获取得到的数据res.data是一个字典类型，需要转为parameters的格式，把它的key转为label,value转为value
-      const tempParameters = Object.keys(res.data).map((key) => {
-        return { label: key, value: res.data[key] };
-      });
-      console.log(tempParameters);
-      // 我们只需要前9个参数
-      const parameters_ = JSON.parse(
-        JSON.stringify(tempParameters.slice(0, 9))
-      );
-      this.parameters = parameters_;
-      console.log(this.parameters);
-    });
+    setTimeout(() => {
+      // 获取并构建组合秤重量显示数据
+      this.getDouWeight();
+
+      // // 设置按钮的可用状态
+      // this.setBtnCtrl();
+      this.getDevRunstatus();
+
+      // 获取面板的数据
+      this.getPanel();
+    }, 2000);
   },
   onShow() {},
   // 其他组件生命周期钩子和方法
@@ -286,6 +265,68 @@ export default {
         }
       });
     },
+    // 获取设备运行状态
+    getDevRunstatus() {
+      getRunStatus({
+        devId: uni.getStorageSync("devId"),
+      }).then((res) => {
+        console.log(res);
+        this.runStatus = res.data;
+      });
+    },
+    // 获取并构建组合秤重量显示数据
+    getDouWeight() {
+      readParam({
+        devName: this.devName,
+        paramKey: "doustatus",
+      }).then((res) => {
+        console.log(res);
+        this.weightValues = JSON.parse(res.data.doustatus);
+        console.log(this.weightValues);
+        // 显示14个即可
+        let douNum = 14;
+        let startPosition = Math.floor((douNum + 1) / 2);
+        this.weightValues = this.weightValues.slice(
+          startPosition,
+          startPosition + douNum
+        );
+        // 补足精度的0
+        for (let i = 0; i < this.weightValues.length; i++) {
+          // if (this.weightValues[i] == null) {
+          //   this.weightValues[i] = "0.0";
+          // }
+          this.weightValues[i] = this.weightValues[i].toFixed(
+            this.sysConfig["sys_dot_num"]
+          );
+        }
+      });
+    },
+    // 获取面板的数据
+    getPanel() {
+      getPanelData({
+        devId: uni.getStorageSync("devId"),
+      }).then((res) => {
+        console.log(res);
+        this.realtimeWeight = res.data.weight == null ? 0 : res.data.weight;
+        console.log("小数位数：", this.sysConfig["sys_dot_num"]);
+        this.realtimeWeight = this.realtimeWeight.toFixed(
+          this.sysConfig["sys_dot_num"]
+        );
+        this.weight_unit = res.data.sys_unit;
+        this.afc = res.data.afc;
+        // 处理数据：获取得到的数据res.data是一个字典类型，需要转为parameters的格式，把它的key转为label,value转为value
+        const tempParameters = Object.keys(res.data).map((key) => {
+          return { label: key, value: res.data[key] };
+        });
+        console.log(tempParameters);
+        // 我们只需要前9个参数
+        const parameters_ = JSON.parse(
+          JSON.stringify(tempParameters.slice(0, 9))
+        );
+        this.parameters = parameters_;
+        console.log(this.parameters);
+      });
+    },
     // 按钮显示重置
     btnReset() {
       this.showOperateBtns = true;
@@ -309,6 +350,7 @@ export default {
     },
     // 显示或隐藏菜单按钮
     showMenuBtns() {
+      this.showBuiltInBtns();
       this.showMenuBtn = !this.showMenuBtn;
     },
     // 显示隐藏置零按钮
@@ -317,8 +359,8 @@ export default {
     },
     // 基本操作按钮
     mainOper(type) {
-      this.InDeveloping();
-      return;
+      // this.InDeveloping();
+      // return;
       if (type === "run") {
         this.sendCmd((0x02 << 8) | ctrlno.CTRL_RUN, (0x00 << 8) | 0x00);
       } else if (type === "stop") {
@@ -353,41 +395,32 @@ export default {
     },
     // 设置按钮的可用状态(在每次操作之后调用)
     setBtnCtrl() {
-      // 获取设备运行状态
-      getRunStatus({
-        devName: this.devName,
-      })
-        .then((res) => {
-          const form = res.data;
-          let b = form.isManualClean || form.isManualZero || form.isManualEmpty;
-          let run = form.isRun;
-          let lack = form.isLackMaterial;
-          let alarm = form.isHaveAlarm;
+      const status = this.runStatus;
+      let run = status.isRun;
 
-          let enabled = !b;
-
-          this.btnCtrl["reset"] = enabled;
-          this.btnCtrl["empty"] = enabled;
-          this.btnCtrl["clean"] = enabled;
-          this.btnCtrl["menu"] = enabled && !lack && !run;
-          this.btnCtrl["zero"] = enabled;
-          this.btnCtrl["combine"] = enabled;
-          this.btnCtrl["tj"] = enabled;
-          this.btnCtrl["zjSetting"] = enabled;
-          this.btnCtrl["timeSetting"] = enabled;
-          this.btnCtrl["camera"] = enabled;
-
-          this.btnCtrl["run"] = enabled && !run;
-          this.btnCtrl["stop"] = enabled && run;
-          this.btnCtrl["lack_stop"] = enabled && form.IsLackMaterialDisable;
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      this.btnCtrl["menu"] = !run;
+      this.btnCtrl["zero"] = !run;
     },
     // 交换函数
     swap(a, b) {
       [a, b] = [b, a];
+    },
+    // 获取设备信息并存储到缓存
+    getDeviceInfoAndStore() {
+      getSysConfig({
+        devId: uni.getStorageSync("devId"),
+      })
+        .then((res) => {
+          console.log(res);
+          this.sysConfig = res.data;
+          // 遍历res.data，res.data是一个map，key是属性名，value是属性值，将key和value存储到缓存中
+          Object.keys(res.data).forEach((key) => {
+            uni.setStorageSync(key, res.data[key]);
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     },
   },
 };

@@ -152,7 +152,7 @@ export default {
     // 获取数据设置指定斗选择状态
     initDouPage(opt) {
       getDouParam({
-        devName: opt.devName,
+        devId: uni.getStorageSync("devId"),
         param: opt.param,
       }).then((res) => {
         console.log(res);
@@ -208,7 +208,7 @@ export default {
     saveData() {
       // 检测设备是否在线
       checkDevStatus({
-        devName: this.devName,
+        devId: uni.getStorageSync("devId"),
       }).then((res) => {
         if (res.msg != 200) {
           uni.showToast({

@@ -40,7 +40,7 @@ export function updateParamValue(data) {
     url: '/param/paramValue',
     method: 'put',
     data: data,
-	timeout: 30000
+    timeout: 30000
   })
 }
 
@@ -85,7 +85,7 @@ export function collModuleStatus(query) {
     url: '/param/paramValue/collModuleStatus',
     method: 'get',
     params: query,
-	timeout: 60000
+    timeout: 60000
   })
 }
 
@@ -104,7 +104,7 @@ export function getMotorParam(query) {
     url: '/param/paramValue/getMotorParam',
     method: 'get',
     params: query,
-	timeout: 60000
+    timeout: 60000
   })
 }
 //获取频率增益参数
@@ -113,7 +113,7 @@ export function getPlzyParam(query) {
     url: '/param/paramValue/getPlzyParam',
     method: 'get',
     params: query,
-	timeout: 60000
+    timeout: 60000
   })
 }
 

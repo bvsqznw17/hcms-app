@@ -3,17 +3,12 @@
     <!-- 按钮菜单模板 -->
     <view class="uni-padding-wrap uni-common-mt">
       <view class="uni-btn-v">
-        <navigator
-          v-for="(it, idx) in menuList"
-          :key="idx"
-          :url="
+        <navigator v-for="(it, idx) in menuList" :key="idx" :url="
             '/pages/device/advancedSetting/mkStatus/mkStatusParam?param=' +
             it.param +
             '&devName=' +
             devName
-          "
-          hover-class="navigator-hover"
-        >
+          " hover-class="navigator-hover">
           <button type="default">{{ it.text }}</button>
         </navigator>
       </view>
@@ -57,7 +52,7 @@ export default {
       uni.showLoading({
         title: "模块数据采集中",
       });
-      collModuleStatus({ devName: devName }).then((res) => {
+      collModuleStatus({ devId: uni.getStorageSync("devId") }).then((res) => {
         console.log(res);
         uni.hideLoading();
         if (res.code == 200) {

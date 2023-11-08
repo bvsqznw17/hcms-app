@@ -116,7 +116,7 @@ export default {
     }
 
     getInOutParam({
-      devName: devName,
+      devId: uni.getStorageSync("devId"),
       param: param,
       inOut: inOut,
     }).then((res) => {
@@ -149,7 +149,7 @@ export default {
     saveData() {
       // 检测设备是否在线
       checkDevStatus({
-        devName: this.form.devName,
+        devId: uni.getStorageSync("devId"),
       }).then((res) => {
         if (res.msg != 200) {
           uni.showToast({

@@ -39,7 +39,7 @@ export default {
     // 获取模块状态参数
     getMkParam({
       param: param,
-      devName: devName,
+      devId: uni.getStorageSync("devId"),
     }).then((res) => {
       console.log(res);
       this.pvList = res.data.map((it, idx) => {

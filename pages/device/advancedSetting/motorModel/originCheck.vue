@@ -90,7 +90,7 @@ export default {
     saveData(data) {
       // 检测设备是否在线
       checkDevStatus({
-        devName: this.queryParams.devName,
+        devId: uni.getStorageSync("devId"),
       }).then((res) => {
         if (res.msg != 200) {
           uni.showToast({

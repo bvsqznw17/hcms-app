@@ -44,12 +44,7 @@
 </template>
 
 <script>
-import {
-  writeCmd,
-  readParam,
-  getRunStatus,
-  getDouStatus,
-} from "@/api/device/business.js";
+import { writeCmd, readParam, getRunStatus } from "@/api/device/business.js";
 import { ctrlno } from "@/utils/devConstant.js";
 export default {
   data() {
@@ -80,16 +75,22 @@ export default {
         empty: false,
         clean: false,
       },
+      runStatus: {}, // 设备运行状态
     };
   },
   onload() {
     // 加载斗状态
+    this.getDouRunStatus();
   },
   methods: {
     // 向设备发送指令
     sendCmd(cmd, cmdParam) {
       this.setBtnCtrl();
-      writeCmd(cmd, cmdParam).then((res) => {
+      writeCmd({
+        devName: uni.getStorageSync("devName"),
+        cmd: cmd,
+        cmdParam: cmdParam,
+      }).then((res) => {
         console.log(res);
         if (res.code == 200) {
           uni.showToast({
@@ -114,6 +115,14 @@ export default {
         this.sendCmd(ctrlno.CTL_MANUAL_CLEAN, 0x01);
       }
     },
+    // 获取设备运行状态
+    getDouRunStatus() {
+      getRunStatus({
+        devId: uni.getStorageSync("devId"),
+      }).then((res) => {
+        console.log(res);
+      });
+    },
     // 返回主界面按钮的操作方法
     backMain() {
       uni.navigateBack({
@@ -126,6 +135,32 @@ export default {
         title: "正在开发中，该页面功能暂不可用",
         icon: "none",
       });
+    },
+    // 设置按钮的可用状态(在每次操作之后调用)
+    setBtnCtrl() {
+      const status = this.runStatus;
+      let b =
+        status.isManualClean || status.isManualZero || status.isManualEmpty;
+      let run = status.isRun;
+      let lack = status.isLackMaterial;
+      let alarm = status.isHaveAlarm;
+
+      let enabled = !b;
+
+      this.btnCtrl["reset"] = enabled;
+      this.btnCtrl["empty"] = enabled;
+      this.btnCtrl["clean"] = enabled;
+      this.btnCtrl["menu"] = enabled && !lack && !run;
+      this.btnCtrl["zero"] = enabled;
+      this.btnCtrl["combine"] = enabled;
+      this.btnCtrl["tj"] = enabled;
+      this.btnCtrl["zjSetting"] = enabled;
+      this.btnCtrl["timeSetting"] = enabled;
+      this.btnCtrl["camera"] = enabled;
+
+      this.btnCtrl["run"] = enabled && !run;
+      this.btnCtrl["stop"] = enabled && run;
+      this.btnCtrl["lack_stop"] = enabled && status.IsLackMaterialDisable;
     },
   },
 };

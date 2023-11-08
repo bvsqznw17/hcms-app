@@ -4,7 +4,7 @@
     <view class="image-section">
       <!-- 使用 v-for 渲染小方格 -->
       <view class="small-box-container">
-        <view v-for="(weight, index) in weightValues" :key="index" class="small-box">
+        <view v-for="(weight, index) in weightValues" :key="index" @click="clickBox(index)" class="small-box">
           <span class="box-number">{{ index + 1 }}</span>
           <span class="box-weight">{{ weight }}</span>
         </view>
@@ -16,34 +16,34 @@
       <view class="debug-button-area" v-show="showDebugBtn">
         <view class="button-area">
           <!-- 包含 单次运行、连续运行、主振机、线振机、进料斗、称重斗、集料斗、强排导管、禁止斗、斗重量按钮-->
-          <button class="action-btn" @click="sendCommand(1)">单次运行</button>
-          <button class="action-btn" @click="sendCommand(2)">连续运行</button>
-          <button class="action-btn" @click="sendCommand(3)">主振机</button>
+          <button class="action-btn" @click="btnClick(0)">单次运行</button>
+          <button class="action-btn" @click="btnClick(1)">连续运行</button>
+          <button class="action-btn" @click="btnClick(2)">主振机</button>
         </view>
         <view class="button-area">
-          <button class="action-btn" @click="sendCommand(4)">线振机</button>
-          <button class="action-btn" @click="sendCommand(5)">进料斗</button>
-          <button class="action-btn" @click="sendCommand(6)">称重斗</button>
+          <button class="action-btn" @click="btnClick(3)">线振机</button>
+          <button class="action-btn" @click="btnClick(4)">进料斗</button>
+          <button class="action-btn" @click="btnClick(5)">称重斗</button>
         </view>
         <view class="button-area">
-          <button class="action-btn" @click="sendCommand(7)">集料斗</button>
-          <button class="action-btn" @click="sendCommand(8)">强排导管</button>
-          <button class="action-btn" @click="sendCommand(9)">禁止斗</button>
+          <button class="action-btn" @click="btnClick(6)">集料斗</button>
+          <button class="action-btn" @click="btnClick(7)">强排导管</button>
+          <button class="action-btn" @click="btnClick(8)">禁止斗</button>
         </view>
         <view class="button-area">
-          <button class="action-btn" @click="sendCommand(10)">斗重量</button>
+          <button class="action-btn" @click="btnClick(9)">斗重量</button>
         </view>
       </view>
 
       <view class="debug-button-area" v-show="!showDebugBtn">
         <view class="button-area">
           <!-- 包含 采样测试、开关斗测试、振动测试、摄像头 按钮 -->
-          <button class="action-btn" @click="sendCommand(11)">采样测试</button>
-          <button class="action-btn" @click="sendCommand(12)">开关斗测试</button>
+          <button class="action-btn" @click="btnClick(10)">采样测试</button>
+          <button class="action-btn" @click="btnClick(11)">开关斗测试</button>
         </view>
         <view class="button-area">
-          <button class="action-btn" @click="sendCommand(13)">振动测试</button>
-          <button class="action-btn" style="flex: 1" @click="sendCommand(14)">摄像头</button>
+          <button class="action-btn" @click="btnClick(12)">振动测试</button>
+          <button class="action-btn" style="flex: 1" @click="btnClick(13)">摄像头</button>
         </view>
       </view>
     </view>
@@ -81,6 +81,13 @@
 </template>
 
 <script>
+import {
+  writeCmd,
+  readParam,
+  getRunStatus,
+  getCmdResult,
+} from "@/api/device/business.js";
+import { ctrlno } from "@/utils/devConstant.js";
 export default {
   data() {
     return {
@@ -105,12 +112,89 @@ export default {
         "14.4",
       ],
       showDebugBtn: true,
+      boxIndex: 0,
+      currentBtn: 0,
     };
   },
   methods: {
-    sendCommand(cmd) {
-      // TODO
+    // 向设备发送指令
+    sendCmd(cmd, cmdParam) {
+      // this.setBtnCtrl();
+      uni.showLoading({
+        title: "调试中...",
+      });
+      writeCmd({
+        devName: uni.getStorageSync("devName"),
+        cmd: cmd,
+        cmdParam: cmdParam,
+      }).then((res) => {
+        console.log(res);
+        if (res.code !== 200) {
+          uni.showToast({
+            title: "指令下发失败",
+          });
+          uni.hideLoading();
+        }
+        // 获取命令执行的结果
+        getCmdResult({
+          devName: uni.getStorageSync("devName"),
+        }).then((resp) => {
+          console.log(resp);
+          uni.hideLoading();
+        });
+      });
+    },
+    btnClick(key) {
+      // TODO 按钮点击
       this.InDeveloping();
+      const douNumber = this.boxIndex + 1;
+      switch (key) {
+        // case 1-9 对应 sendCmd
+        case 0:
+          this.sendCmd(ctrlno.CTL_MANUAL_ONCE, douNumber);
+          break;
+        case 1:
+          this.sendCmd(ctrlno.CTL_MANUAL_CONTINUE, douNumber);
+          break;
+        case 2:
+          this.sendCmd(ctrlno.CTL_MANUAL_ZZJ, douNumber);
+          break;
+        case 3:
+          this.sendCmd(ctrlno.CTL_MANUAL_XZJ, douNumber);
+          break;
+        case 4:
+          this.sendCmd(ctrlno.CTL_MANUAL_HCD, douNumber);
+          break;
+        case 5:
+          this.sendCmd(ctrlno.CTL_MANUAL_CZD, douNumber);
+          break;
+        case 6:
+          this.sendCmd(ctrlno.CTL_MANUAL_JYD, douNumber);
+          break;
+        case 7:
+          this.sendCmd(ctrlno.CTL_MANUAL_JLD, douNumber);
+          break;
+        case 8:
+          this.sendCmd(ctrlno.CTL_DOU_PROHIBIT, douNumber);
+          break;
+        case 9:
+          this.sendCmd(ctrlno.CTL_SEZ, douNumber);
+          break;
+        case 10:
+          this.showSamp(douNumber);
+          return false;
+        case 11:
+          this.showKaiMen(douNumber);
+          return false;
+        case 12:
+          this.showZhenDong(douNumber);
+          return false;
+        case 13:
+          this.showCamera();
+          return false;
+        default:
+          return false;
+      }
     },
     switchBtns(flag) {
       // 切换调试按钮
@@ -122,12 +206,36 @@ export default {
         delta: 1,
       });
     },
+    clickBox(index) {
+      this.boxIndex = index;
+    },
     // 提示正在开发中
     InDeveloping() {
       uni.showToast({
         title: "正在开发中，该页面功能暂不可用",
         icon: "none",
       });
+    },
+    // 采样测试
+    showSamp(douNumber) {
+      this.InDeveloping();
+    },
+    // 开关斗测试
+    showKaiMen(douNumber) {
+      this.InDeveloping();
+    },
+    // 振动测试
+    showZhenDong(douNumber) {
+      this.InDeveloping();
+    },
+    // 摄像头测试
+    showCamera() {
+      this.InDeveloping();
+    },
+    // 设置按钮使用
+    setBtnCtrl() {
+      // 禁用除指定按钮以外的所有按钮
+      this.showDebugBtn = false;
     },
   },
 };

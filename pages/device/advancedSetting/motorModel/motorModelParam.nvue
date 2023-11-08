@@ -128,7 +128,7 @@ import { checkDevStatus } from "@/api/device/business.js";
 				// 查询得到一个数组，这个数组应当可以直接被用于展示用-每组6个对象，直接查询返回，然后使用
 				let that = this
 				let queryParams = {
-					devName: that.queryParams.devName,
+					devId: uni.getStorageSync('devId'),
 					mainModel: that.queryParams.mainModel,
 					subModel: that.queryParams.subModel
 				}

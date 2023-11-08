@@ -1,25 +1,8 @@
 <template>
   <view>
-    <uni-forms
-      v-if="pvList && pvList.length > 0"
-      label-position="left"
-      labelAlign="center"
-      labelWidth="375upx"
-    >
-      <uni-forms-item
-        style="margin-right: 10px"
-        v-for="(it, idx) in pvList"
-        :key="idx"
-        :name="it.paramName"
-        :label="it.paramName"
-      >
-        <uni-easyinput
-          class="inputCss"
-          type="text"
-          v-model="it.paramValue"
-          @change="changeInput(it)"
-          :disabled="it.disabled"
-        />
+    <uni-forms v-if="pvList && pvList.length > 0" label-position="left" labelAlign="center" labelWidth="375upx">
+      <uni-forms-item style="margin-right: 10px" v-for="(it, idx) in pvList" :key="idx" :name="it.paramName" :label="it.paramName">
+        <uni-easyinput class="inputCss" type="text" v-model="it.paramValue" @change="changeInput(it)" :disabled="it.disabled" />
       </uni-forms-item>
     </uni-forms>
     <!-- 暂无数据页面 -->
@@ -28,13 +11,7 @@
     </view>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button
-        class="btn-wrapper-button"
-        plain
-        type="primary"
-        @click="saveData()"
-        :disabled="userModel == 1"
-      >
+      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">
         保存
       </button>
     </view>
@@ -108,7 +85,10 @@ export default {
         let targetValue = baseParam[3].paramValue;
         let dww = wordP == 1 ? baseParam[7].paramValue : 0;
         let result = pvList.map((item, index) => {
-          if (item.paramKey == "prm_CombinWeight" || item.paramKey == "prm_OverWeight") {
+          if (
+            item.paramKey == "prm_CombinWeight" ||
+            item.paramKey == "prm_OverWeight"
+          ) {
             item.maxV = (targetValue * dww) / 2 - 1;
           }
         });
@@ -146,7 +126,10 @@ export default {
             disable_p2cnt = true;
           }
           // 计算decimalNum： 当it.paramKey=='prm_WorP'且it.paramValue==2 || it.paramValue==1时，decimalNum=0 else decimalNum=this.baseDecimal.
-          if (it.paramKey == "prm_WorP" && (it.paramValue == 2 || it.paramValue == 1)) {
+          if (
+            it.paramKey == "prm_WorP" &&
+            (it.paramValue == 2 || it.paramValue == 1)
+          ) {
             decimal = 0;
           }
         });
@@ -210,7 +193,7 @@ export default {
     saveData(data) {
       // 检测设备是否在线
       checkDevStatus({
-        devName: this.queryParams.devName,
+        devId: uni.getStorageSync("devId"),
       }).then((res) => {
         if (res.msg != 200) {
           uni.showToast({
@@ -231,7 +214,9 @@ export default {
           if (it.regAddr in this.updIdMap) {
             // 对小数点反格式化后再进行存储
             if (it.paramName.indexOf(this.strValidParamName) == -1) {
-              it.paramValue = parseInt(it.paramValue * Math.pow(10, it.decimalNum));
+              it.paramValue = parseInt(
+                it.paramValue * Math.pow(10, it.decimalNum)
+              );
             }
             console.log("更新");
             updateParamValue(it).then((res) => {

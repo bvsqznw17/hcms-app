@@ -122,7 +122,7 @@ export default {
     saveData(data) {
       // 检测设备是否在线
       checkDevStatus({
-        devName: this.queryParams.devName,
+        devId: uni.getStorageSync("devId"),
       }).then((res) => {
         if (res.msg != 200) {
           console.log(res);
@@ -150,6 +150,7 @@ export default {
             } else if (it.paramName == "主振增益") {
               it.paramName = "单个振机增益15";
             }
+            it.devId = uni.getStorageSync("devId");
             setPlzyParam(it).then((res) => {
               num++;
               console.log(res);

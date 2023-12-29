@@ -1,8 +1,27 @@
 <template>
   <view>
-    <uni-forms v-if="pvList && pvList.length > 0" :model="pvForm" label-position="left" labelAlign="center" labelWidth="240upx">
-      <uni-forms-item style="margin-right: 10px;" v-for="(it,idx) in pvList" :key="idx" :name="it.paramName" :label="it.paramName">
-        <uni-easyinput class="inputCss" type="text" v-model="it.paramValue" @focus="focusInput(it.id)" @change="changeInput(it)" :disabled="it.disabled" />
+    <uni-forms
+      v-if="pvList && pvList.length > 0"
+      :model="pvForm"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="240upx"
+    >
+      <uni-forms-item
+        style="margin-right: 10px"
+        v-for="(it, idx) in pvList"
+        :key="idx"
+        :name="it.paramName"
+        :label="it.paramName"
+      >
+        <uni-easyinput
+          class="inputCss"
+          type="text"
+          v-model="it.paramValue"
+          @focus="focusInput(it.id)"
+          @change="changeInput(it)"
+          :disabled="it.disabled"
+        />
       </uni-forms-item>
     </uni-forms>
     <!-- 暂无数据页面 -->
@@ -11,7 +30,14 @@
     </view>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()">保存</button>
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveData()"
+      >
+        保存
+      </button>
     </view>
   </view>
 </template>
@@ -24,7 +50,7 @@ export default {
   data() {
     return {
       queryParams: {
-        devName: null,
+        devId: null,
         ip: null,
         paramSubType: 4,
       },
@@ -35,13 +61,14 @@ export default {
       preData: {},
       online: false, // 设备是否在线
       QPDGRelativeKey: ["prm_Dou_PauseTime[2]", "prm_JYD_Dly", "prm_JYD_Dly2"],
+      ruleList: [],
     };
   },
   onLoad(opt) {
     console.log(opt);
     // 根据opt.devName
     this.online = opt.status == 1 ? true : false;
-    this.queryParams.devName = opt.devName;
+    this.queryParams.devId = uni.getStorageSync("devId");
     this.getList();
   },
   methods: {

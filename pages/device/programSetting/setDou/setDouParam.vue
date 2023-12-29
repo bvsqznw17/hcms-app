@@ -1,27 +1,63 @@
 <template>
   <view>
-    <uni-forms class="form-style" :value="form" label-position="left" labelAlign="center" labelWidth="375upx" :border="isBorder">
+    <uni-forms
+      class="form-style"
+      :value="form"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="375upx"
+      :border="isBorder"
+    >
       <!-- 弹框 -->
       <uni-forms-item name="setDou" label="指定斗">
-        <axb-check-box ref="radio" :multi="true" :list="douList" @change="selectBox"></axb-check-box>
+        <axb-check-box
+          ref="radio"
+          :multi="true"
+          :list="douList"
+          @change="selectBox"
+        ></axb-check-box>
       </uni-forms-item>
-      <uni-forms-item style="margin-right: 10px" name="weightUp" label="重量上限">
-        <uni-easyinput class="inputCss" type="text" v-model="form.weightUp.paramValue" @change="changeInput('up')" />
+      <uni-forms-item
+        style="margin-right: 10px"
+        name="weightUp"
+        label="重量上限"
+      >
+        <uni-easyinput
+          class="inputCss"
+          type="text"
+          v-model="form.weightUp.paramValue"
+          @change="changeInput('up')"
+        />
       </uni-forms-item>
-      <uni-forms-item style="margin-right: 10px" name="weightDown" label="重量下限">
-        <uni-easyinput class="inputCss" type="text" v-model="form.weightDown.paramValue" @change="changeInput('down')" />
+      <uni-forms-item
+        style="margin-right: 10px"
+        name="weightDown"
+        label="重量下限"
+      >
+        <uni-easyinput
+          class="inputCss"
+          type="text"
+          v-model="form.weightDown.paramValue"
+          @change="changeInput('down')"
+        />
       </uni-forms-item>
       <!-- 单选框 -->
       <uni-forms-item name="isMultiDou" label="多斗组合">
         <switch @change="changeMultiDou" :checked="isMultiDou"></switch>
       </uni-forms-item>
-      <uni-forms-item name="isSuperLight" label="超强轻排">
+      <uni-forms-item name="isSuperLight" label="超轻强排">
         <switch @change="changeSuperLight" :checked="isSuperLight"></switch>
       </uni-forms-item>
     </uni-forms>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveInputData()"
+        :disabled="userModel == 1"
+      >
         保存
       </button>
     </view>
@@ -29,16 +65,11 @@
 </template>
 
 <script>
-import {
-  updateParamValue,
-  getDouParam,
-  setDouParam,
-} from "@/api/device/paramValue.js";
+import { updateParamValue, getDouParam } from "@/api/device/paramValue.js";
 import { checkDevStatus } from "@/api/device/business.js";
 import popPicker from "@/components/popPicker";
 import axbCheckBox from "@/components/axb-checkbox/axb-checkbox";
-import { formatNumber, trimPoint } from "@/utils/util.js";
-import { listSettings } from "@/api/device/sysSettings.js";
+import { formatNumber } from "@/utils/util.js";
 export default {
   components: {
     popPicker: popPicker,
@@ -99,32 +130,18 @@ export default {
     });
 
     // 获取初始小数位数后初始化页面数据
-    listSettings({ paramKey: "sys_dot_num", devName: devName }).then((res) => {
-      console.log(res);
-      this.baseDecimalNum = res.rows[0].paramValue;
-      this.initDouPage(opt);
-    });
+    this.baseDecimalNum = uni.getStorageSync("sys_dot_num");
+    this.initDouPage(opt);
   },
   methods: {
     // input修改事件
     changeInput(tag) {
-      let val, oldVal;
-      if (tag == "up") {
-        val = this.form.weightUp.paramValue;
-        oldVal = this.old_weightUp;
-      } else {
-        val = this.form.weightDown.paramValue;
-        oldVal = this.old_weightDown;
-      }
-      // 校验修改的值是否超出范围并提示
-      console.log(this.form);
-      console.log(val);
-      console.log(oldVal);
-      // 取单个的值的上下限来进行分析
-      let min = formatNumber(1, this.baseDecimalNum);
+      let min = formatNumber(0, this.baseDecimalNum);
       let max = formatNumber(10000, this.baseDecimalNum);
-      // 将上下限应用小数点位数
-      let pv = +val;
+      let pv = +(tag == "up"
+        ? this.form.weightUp.paramValue
+        : this.form.weightDown.paramValue);
+      console.log(pv);
       if ((pv != 0 && !pv) || pv > max || pv < min) {
         uni.showToast({
           title: "取值范围在" + min + "~" + max,
@@ -133,19 +150,17 @@ export default {
         });
         // 将修改的值改回原来的值
         if (tag == "up") {
-          this.form.weightUp.paramValue = oldVal;
+          this.form.weightUp.paramValue = this.old_weightUp;
         } else {
-          this.form.weightDown.paramValue = oldVal;
+          this.form.weightDown.paramValue = this.old_weightDown;
         }
       } else {
         if (tag == "up") {
-          this.old_weightUp = val;
+          this.old_weightUp = this.form.weightUp.paramValue;
           this.updMap.weightUp = true;
-          // this.updPvList.push(this.form.weightUp)
         } else {
-          this.old_weightDown = val;
+          this.old_weightDown = this.form.weightDown.paramValue;
           this.updMap.weightDown = true;
-          // this.updPvList.push(this.form.weightDown)
         }
       }
     },
@@ -205,7 +220,79 @@ export default {
       });
     },
     // 保存页面数据
-    saveData() {
+    // saveData() {
+    //   // 检测设备是否在线
+    //   checkDevStatus({
+    //     devId: uni.getStorageSync("devId"),
+    //   }).then((res) => {
+    //     if (res.msg != 200) {
+    //       uni.showToast({
+    //         title: "当前设备" + res.msg,
+    //         icon: "none",
+    //         showCancel: false,
+    //       });
+    //       return;
+    //     }
+    //     let num = 0;
+    //     // 检查updMap，是否有修改的数据，有的话加入updPvList
+    //     for (let i in this.updMap) {
+    //       console.log(i);
+    //       if (this.updMap[i]) {
+    //         this.updPvList.push(this.form[i]);
+    //       }
+    //     }
+    //     let len = this.updPvList.length;
+    //     console.log(this.updPvList);
+    //     // 遍历updPvList-修改其中所有的项-需要对两个is进行位运算处理
+    //     for (let i in this.updPvList) {
+    //       let pv = this.updPvList[i];
+    //       console.log(pv);
+    //       // 获取paramKey的除最后3位以外的部分
+    //       let key = pv.paramKey.substring(0, pv.paramKey.length - 3);
+    //       if (key != "prm_ZJD_Dou") {
+    //         console.log(key);
+    //         // 对小数点反格式化后再进行存储[这里的处理是为了防止精度丢失]
+    //         pv.paramValue = +(
+    //           pv.paramValue * Math.pow(10, this.baseDecimalNum)
+    //         ).toFixed(this.baseDecimalNum);
+    //       }
+    //       updateParamValue(pv).then((res) => {
+    //         num++;
+    //         console.log(res);
+    //         if (num == len) {
+    //           this.updPvList = [];
+    //           uni.showModal({
+    //             content: "保存成功",
+    //             showCancel: false,
+    //           });
+    //           // 将修改的值改回原来的值
+    //           if (key != "prm_ZJD_Dou") {
+    //             pv.paramValue = formatNumber(
+    //               pv.paramValue,
+    //               this.baseDecimalNum
+    //             );
+    //           }
+    //         }
+    //       });
+    //     }
+    //   });
+    // },
+    saveInputData() {
+      // 检查updMap，是否有修改的数据，有的话加入updPvList
+      for (let i in this.updMap) {
+        console.log(i);
+        if (this.updMap[i]) {
+          this.updPvList.push(this.form[i]);
+        }
+      }
+      console.log(this.updPvList);
+      // 遍历updPvList-修改其中所有的项-需要对两个is进行位运算处理
+      for (let i in this.updPvList) {
+        let pv = this.updPvList[i];
+        this.saveData(pv);
+      }
+    },
+    saveData(pv) {
       // 检测设备是否在线
       checkDevStatus({
         devId: uni.getStorageSync("devId"),
@@ -218,67 +305,71 @@ export default {
           });
           return;
         }
-        uni.setStorageSync("curDev", this.form.devName);
-        let num = 0;
-        // 检查updMap，是否有修改的数据，有的话加入updPvList
-        for (let i in this.updMap) {
-          console.log(i);
-          if (this.updMap[i]) {
-            this.updPvList.push(this.form[i]);
-          }
+        console.log(pv);
+        // 获取paramKey的除最后3位以外的部分
+        let key = pv.paramKey.substring(0, pv.paramKey.length - 3);
+        if (key == "prm_ZJD_WeightDn" || key == "prm_ZJD_WeightUp") {
+          console.log(key);
+          // 对小数点反格式化后再进行存储[这里的处理是为了防止精度丢失]
+          pv.paramValue = +(
+            pv.paramValue * Math.pow(10, this.baseDecimalNum)
+          ).toFixed(this.baseDecimalNum);
         }
-        let len = this.updPvList.length;
-        console.log(this.updPvList);
-        // 遍历updPvList-修改其中所有的项-需要对两个is进行位运算处理
-        for (let i in this.updPvList) {
-          let pv = this.updPvList[i];
-          console.log(pv);
-          // 将pv的paramValue转为整数
-          let oldVal = pv.paramValue;
-          pv.paramValue = trimPoint(pv.paramValue);
-          updateParamValue(pv).then((res) => {
-            num++;
-            console.log(res);
-            if (num == len) {
-              this.updPvList = [];
-              uni.showModal({
-                content: "保存成功",
-                showCancel: false,
-              });
-              // 将修改的值改回原来的值
-              pv.paramValue = oldVal;
-            }
+        uni.showLoading({
+          title: "数据正在保存中,请稍后...",
+          mask: true,
+        });
+        updateParamValue(pv).then((res) => {
+          console.log(res);
+          uni.showModal({
+            content: "保存成功",
+            showCancel: false,
           });
-        }
+          uni.hideLoading();
+          // 将修改的值改回原来的值
+          if (key != "prm_ZJD_Dou") {
+            pv.paramValue = formatNumber(pv.paramValue, this.baseDecimalNum);
+          }
+        });
       });
-    },
-    // 过滤小数点转为整数
-    trimPoint(v) {
-      return parseInt(String(v).replace(".", "")) | v;
     },
     // 修改多斗组合
     changeMultiDou(e) {
+      console.log(e);
       let param = this.param;
       let val = parseInt(this.form.isMultiDou.paramValue);
       if (e.detail.value) {
         val |= 1 << param;
+        // 如果超轻强排也开启，则关闭超轻强排
+        if (this.isSuperLight) {
+          this.changeSuperLight({ detail: { value: false } });
+          this.isSuperLight = false;
+        }
       } else {
         val &= ~(1 << param);
       }
       this.form.isMultiDou.paramValue = val;
-      this.updMap.isMultiDou = true;
+      this.saveData(this.form.isMultiDou);
+      // this.updMap.isMultiDou = true;
     },
-    // 修改超强轻排
+    // 修改超轻强排
     changeSuperLight(e) {
+      console.log(e);
       let param = this.param;
       let val = parseInt(this.form.isSuperLight.paramValue);
       if (e.detail.value) {
         val |= 1 << param;
+        // 如果多斗组合也开启，则关闭多斗组合
+        if (this.isMultiDou) {
+          this.changeMultiDou({ detail: { value: false } });
+          this.isMultiDou = false;
+        }
       } else {
         val &= ~(1 << param);
       }
       this.form.isSuperLight.paramValue = val;
-      this.updMap.isSuperLight = true;
+      this.saveData(this.form.isSuperLight);
+      // this.updMap.isSuperLight = true;
     },
     // 是否选中多斗组合
     ckMultiDou() {
@@ -286,7 +377,7 @@ export default {
       console.log(ck);
       return ck != 0;
     },
-    // 是否选中超强轻排
+    // 是否选中超轻强排
     ckSuperLight() {
       console.log(this.form.isSuperLight.paramValue);
       console.log(this.param);
@@ -313,7 +404,8 @@ export default {
         this.selectedDou |= 1 << (re_all[i] - 1);
       }
       uni.setStorageSync("selectedDou", this.selectedDou);
-      this.updMap.setDou = true;
+      // this.updMap.setDou = true;
+      this.saveData(this.form.setDou);
     },
   },
 };

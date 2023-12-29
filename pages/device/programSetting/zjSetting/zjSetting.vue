@@ -1,8 +1,24 @@
 <template>
   <view>
-    <uni-forms v-if="pvList && pvList.length > 0" label-position="left" labelAlign="center" labelWidth="375upx">
-      <uni-forms-item style="margin-right: 10px;" v-for="(it,idx) in pvList" :key="idx" :name="it.paramName" :label="it.paramName">
-        <uni-easyinput class="inputCss" type="text" v-model="it.paramValue" @change="changeInput(it)" />
+    <uni-forms
+      v-if="pvList && pvList.length > 0"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="375upx"
+    >
+      <uni-forms-item
+        style="margin-right: 10px"
+        v-for="(it, idx) in pvList"
+        :key="idx"
+        :name="it.paramName"
+        :label="it.paramName"
+      >
+        <uni-easyinput
+          class="inputCss"
+          type="text"
+          v-model="it.paramValue"
+          @change="changeInput(it)"
+        />
       </uni-forms-item>
     </uni-forms>
     <!-- 暂无数据页面 -->
@@ -11,7 +27,15 @@
     </view>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">保存</button>
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveData()"
+        :disabled="userModel == 1"
+      >
+        保存
+      </button>
     </view>
   </view>
 </template>
@@ -24,7 +48,7 @@ export default {
   data() {
     return {
       queryParams: {
-        devName: null,
+        devId: null,
         paramSubType: 1,
       },
       pvList: [],
@@ -35,8 +59,8 @@ export default {
   },
   onLoad(opt) {
     this.userModel = uni.getStorageSync("userModel");
-    this.queryParams.devName = uni.getStorageSync("devName");
-    // this.queryParams.devName = opt.devName;
+    this.queryParams.devId = uni.getStorageSync("devId");
+    // this.queryParams.devId =uni.getStorageSync("devId");
     this.queryParams.paramSubType = opt.param ? opt.param : 3;
     this.getList();
   },
@@ -48,9 +72,10 @@ export default {
         res.data.map((item, index) => {
           if (item.paramName.indexOf("线振振幅") != -1) {
             let num = item.paramName.replace("线振振幅", "");
-            if (parseInt(num) > 14) {
+            if (parseInt(num) > 15 || parseInt(num) < 2) {
               return null;
             } else {
+              item.paramName = "线振振幅" + (num - 1);
               this.pvList.push(item);
             }
           } else {
@@ -111,7 +136,7 @@ export default {
           });
           return;
         }
-        uni.setStorageSync("curDev", this.queryParams.devName);
+
         let tabData = data || this.pvList;
         // 遍历tabData，判断是否在updIdMap中，在就修改
         let keys = Object.keys(this.updIdMap);

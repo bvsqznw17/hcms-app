@@ -72,7 +72,7 @@
             "style" :                                                                                    
             {
                 "navigationBarTitleText": "设备列表",
-                "enablePullDownRefresh": false
+                "enablePullDownRefresh": true
             }
             
         }
@@ -125,7 +125,7 @@
 			"style" :                                                                                    
 			{
 			    "navigationBarTitleText": "修改日志",
-			    "enablePullDownRefresh": false
+			    "enablePullDownRefresh": true
 			}
 		}
         
@@ -439,6 +439,38 @@
                 "enablePullDownRefresh": false
             }
             
+        },
+        {
+        	"path" : "pages/device/manualDebug/sampingTest/sampingTest",
+        	"style" : 
+        	{
+        		"navigationBarTitleText" : "采样测试",
+        		"enablePullDownRefresh" : false
+        	}
+        },
+        {
+        	"path" : "pages/device/manualDebug/KaiMenTest/KaiMenTest",
+        	"style" : 
+        	{
+        		"navigationBarTitleText" : "",
+        		"enablePullDownRefresh" : false
+        	}
+        },
+        {
+        	"path" : "pages/device/manualDebug/zdTest/zdTest",
+        	"style" : 
+        	{
+        		"navigationBarTitleText" : "",
+        		"enablePullDownRefresh" : false
+        	}
+        },
+        {
+        	"path" : "pages/device/advancedSetting/motorModel/motorModelZzParam",
+        	"style" : 
+        	{
+        		"navigationBarTitleText" : "",
+        		"enablePullDownRefresh" : false
+        	}
         }
     ],
   "tabBar": {

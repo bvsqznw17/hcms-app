@@ -14,7 +14,11 @@
       <!-- 组合秤参数展示 -->
       <view class="grid-container">
         <!-- 使用 v-for 渲染参数项 -->
-        <view v-for="(param, index) in parameters" :key="index" class="param-item">
+        <view
+          v-for="(param, index) in parameters"
+          :key="index"
+          class="param-item"
+        >
           <span class="param-label">{{ param.label }}:</span>
           <span class="param-value">{{ param.value }}</span>
         </view>
@@ -30,32 +34,37 @@
     </view>
 
     <!-- 空白区域用于放置组合秤图片 -->
-    <view class="image-section">
-      <!-- 使用 v-for 渲染小方格 -->
-      <view class="small-box-container">
-        <view v-for="(weight, index) in weightValues" :key="index" class="small-box">
-          <span class="box-number">{{ index + 1 }}</span>
-          <span class="box-weight">{{ weight }}</span>
-        </view>
-      </view>
-    </view>
+    <dou-image class="blank-area" ref="douImage"></dou-image>
 
     <!-- 底部 -->
     <view class="bottom-section" v-show="showBuiltInBtn">
       <!-- 第一行按钮 -->
       <view class="button-area">
         <!-- 置零按钮 -->
-        <button class="action-btn" @click="skipTo('zeroOper')" :disabled="btnCtrl['zero']">
+        <button
+          class="action-btn"
+          @click="skipTo('zeroOper')"
+          :disabled="!btnCtrl['zero']"
+        >
           置零
         </button>
 
         <!-- 组合按钮 -->
-        <button class="action-btn" @click="combine()" :disabled="btnCtrl['combine']">
+        <button
+          class="action-btn"
+          style="background-color: #569bc6; color: white"
+          @click="combine()"
+          :disabled="!btnCtrl['combine']"
+        >
           组合
         </button>
 
         <!-- 统计按钮 -->
-        <button class="action-btn" @click="skipTo('statistic')" :disabled="btnCtrl['statistic']">
+        <button
+          class="action-btn"
+          @click="skipTo('statistic')"
+          :disabled="!btnCtrl['statistic']"
+        >
           统计
         </button>
       </view>
@@ -63,17 +72,29 @@
       <!-- 第二行按钮 -->
       <view class="button-area">
         <!-- 参数调整按钮 -->
-        <button class="action-btn" @click="skipTo('zjSetting')" :disabled="btnCtrl['zjSetting']">
+        <button
+          class="action-btn"
+          @click="skipTo('zjSetting')"
+          :disabled="!btnCtrl['zjSetting']"
+        >
           参数调整
         </button>
 
         <!-- 时间调整按钮 -->
-        <button class="action-btn" @click="skipTo('timeSetting')" :disabled="btnCtrl['timeSetting']">
+        <button
+          class="action-btn"
+          @click="skipTo('timeSetting')"
+          :disabled="!btnCtrl['timeSetting']"
+        >
           时间调整
         </button>
 
         <!-- 摄像头按钮 -->
-        <button class="action-btn" @click="skipTo('camera')" :disabled="btnCtrl['camera']">
+        <button
+          class="action-btn"
+          @click="skipTo('camera')"
+          :disabled="!btnCtrl['camera']"
+        >
           摄像头
         </button>
       </view>
@@ -87,10 +108,14 @@
       <!-- 第一行按钮 -->
       <view class="button-area">
         <!-- 程序设置 -->
-        <button class="action-btn" @click="skipTo('programSetting')">程序设置</button>
+        <button class="action-btn" @click="skipTo('programSetting')">
+          程序设置
+        </button>
 
         <!-- 高级设置 -->
-        <button class="action-btn" @click="skipTo('advancedSetting')">高级设置</button>
+        <button class="action-btn" @click="skipTo('advancedSetting')">
+          高级设置
+        </button>
 
         <!-- 输入输出 -->
         <button class="action-btn" @click="skipTo('InOut')">输入输出</button>
@@ -99,13 +124,31 @@
       <!-- 第二行按钮 -->
       <view class="button-area">
         <!-- 手动调试 -->
-        <button class="action-btn" @click="skipTo('manualDebug')">手动调试</button>
+        <button
+          class="action-btn"
+          @click="skipTo('manualDebug')"
+          :disabled="!btnCtrl['debug']"
+        >
+          手动调试
+        </button>
 
         <!-- 校准 -->
-        <button class="action-btn" @click="skipTo('calibration')">校准</button>
+        <button
+          class="action-btn"
+          @click="skipTo('calibration')"
+          :disabled="!btnCtrl['calib']"
+        >
+          校准
+        </button>
 
         <!-- 软件升级 -->
-        <button class="action-btn" @click="skipTo('upgrade')">软件升级</button>
+        <button
+          class="action-btn"
+          @click="skipTo('upgrade')"
+          :disabled="!btnCtrl['upgrade']"
+        >
+          软件升级
+        </button>
       </view>
     </view>
 
@@ -117,13 +160,26 @@
       <!-- 内置按钮区域 -->
       <!-- 多个按钮放在容器中，使用 v-show 控制显示与隐藏 -->
       <view class="button-area">
-        <button class="action-btn" @click="mainOper('run')" :disabled="btnCtrl['run']">
+        <button
+          class="action-btn"
+          @click="mainOper('run')"
+          :disabled="!btnCtrl['run']"
+        >
           运行
         </button>
-        <button class="action-btn" @click="mainOper('stop')" :disabled="btnCtrl['stop']">
+        <button
+          class="action-btn"
+          @click="mainOper('stop')"
+          :disabled="!btnCtrl['stop']"
+        >
           停止
         </button>
-        <button class="action-btn" @click="mainOper('lack_stop')" :disabled="btnCtrl['lack_stop']">
+        <button
+          class="action-btn"
+          :class="{ 'btn-checked': btnChecked['lack_stop'] }"
+          @click="mainOper('lack_stop')"
+          :disabled="!btnCtrl['lack_stop']"
+        >
           缺料停机
         </button>
       </view>
@@ -131,10 +187,13 @@
 
     <!-- 最底部 -->
     <view class="footer">
-
       <!-- 菜单按钮 -->
-      <button class="action-btn right-btn" @click="showMenuBtns()" :disabled="btnCtrl['menu']">
-        菜单
+      <button
+        class="action-btn menu-btn"
+        @click="showMenuBtns()"
+        :disabled="!btnCtrl['menu']"
+      >
+        {{ showMenuBtn ? "返回" : "菜单" }}
       </button>
     </view>
   </view>
@@ -147,9 +206,16 @@ import {
   readParam,
   getRunStatus,
   getSysConfig,
+  getCmdResult,
+  refreshCache,
 } from "@/api/device/business.js";
 import { ctrlno } from "@/utils/devConstant.js";
+import DouImage from "@/components/douImage/douImage.vue";
+import { formatNumber } from "@/utils/util.js";
 export default {
+  components: {
+    DouImage,
+  },
   data() {
     return {
       devName: "设备名称",
@@ -167,25 +233,9 @@ export default {
         { label: "实际速度", value: "4" },
       ],
       // 其他组件数据和方法
-      realtimeWeight: "0.5", // 实时重量
+      realtimeWeight: formatNumber(0, uni.getStorageSync("sys_dot_num")), // 实时重量
       weight_unit: "g", // 重量单位
       afc: "afc", // afc模式
-      weightValues: [
-        "1.1",
-        "2.2",
-        "3.3",
-        "4.4",
-        "5.5",
-        "6.6",
-        "7.7",
-        "8.8",
-        "9.9",
-        "10.0",
-        "11.1",
-        "12.2",
-        "13.3",
-        "14.4",
-      ],
       showBuiltInBtn: true, // 控制是否显示内置按钮
       showOperateBtn: true, // 控制是否显示操作按钮
       showMenuBtn: false, // 控制是否显示菜单按钮
@@ -205,114 +255,130 @@ export default {
         "cmb_Weight",
       ],
       btnCtrl: {
-        // 控制按钮是否禁用
+        // 控制按钮是否可用
         run: false,
         stop: false,
         lack_stop: false,
-        menu: false,
-        zero: false,
-        combine: false,
+        menu: true,
+        zero: true,
+        combine: true,
         statistic: false,
-        zjSetting: false,
-        timeSetting: false,
+        zjSetting: true,
+        timeSetting: true,
         camera: false,
+        calib: true,
+        upgrade: true,
+        debug: true,
+      },
+      btnChecked: {
+        // 控制按钮是否选中
+        lack_stop: false,
       },
       sysConfig: {}, // 系统配置
       runStatus: {}, // 设备运行状态
+      doustatus: {}, // 组合秤状态s
+      dotNum: 0, // 小数位数
+      intervalId: null, // 定时器id
     };
   },
   onLoad() {
     // 获取devName等信息
     this.devName = uni.getStorageSync("devName");
+    this.devId = uni.getStorageSync("devId");
 
     // 获取系统信息并存储到缓存中
     this.getDeviceInfoAndStore();
 
-    setTimeout(() => {
-      // 获取并构建组合秤重量显示数据
-      this.getDouWeight();
-
-      // // 设置按钮的可用状态
-      // this.setBtnCtrl();
-      this.getDevRunstatus();
-
-      // 获取面板的数据
-      this.getPanel();
-    }, 2000);
+    // this.getDevRunstatus();
+    // setTimeout(() => {
+    // 获取面板的数据
+    this.getPanel();
+    // }, 2000);
   },
-  onShow() {},
+  onShow() {
+    // 如果是监控模式，禁止一些按钮
+    if (uni.getStorageSync("userModel") == "1") {
+      // 不允许置零、手动调试、校准、运行、停止、缺料停机、升级
+      this.btnCtrl["zero"] = false;
+      this.btnCtrl["calib"] = false;
+      this.btnCtrl["debug"] = false;
+      this.btnCtrl["run"] = false;
+      this.btnCtrl["stop"] = false;
+      this.btnCtrl["lack_stop"] = false;
+      this.btnCtrl["upgrade"] = false;
+    }
+    if (this.intervalId == null) {
+      // 启动刷新器
+      this.startReader(1000);
+    }
+  },
+  onHide() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+    console.log("页面隐藏");
+  },
+  beforeDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+      this.intervalId = null;
+    }
+  },
   // 其他组件生命周期钩子和方法
   methods: {
     // 向设备发送指令
     sendCmd(cmd, cmdParam) {
-      // 设置按钮禁用状态
-      this.setBtnCtrl();
+      uni.showLoading({
+        title: "指令下发中...",
+        mask: true,
+      });
       // 向设备发送指令
       writeCmd({
-        devName: this.devName,
+        devId: this.devId,
         cmd: cmd,
         cmdParam: cmdParam,
       }).then((res) => {
         console.log(res);
-        if (res.code == 200) {
-          uni.showToast({
-            title: "指令下发成功",
-          });
-        } else {
+        if (res.code !== 200) {
           uni.showToast({
             title: "指令下发失败",
           });
+          uni.hideLoading();
         }
+
+        // 获取命令执行的结果
+        getCmdResult({
+          devId: this.devId,
+        }).then((resp) => {
+          console.log(resp);
+          this.getDevRunstatus();
+          uni.hideLoading();
+        });
       });
     },
     // 获取设备运行状态
     getDevRunstatus() {
       getRunStatus({
-        devId: uni.getStorageSync("devId"),
+        devId: this.devId,
       }).then((res) => {
-        console.log(res);
+        console.log("运行状态", res);
         this.runStatus = res.data;
+
+        // 设置按钮的可用状态
+        this.setBtnCtrl(res.data);
       });
     },
-    // 获取并构建组合秤重量显示数据
-    getDouWeight() {
-      readParam({
-        devName: this.devName,
-        paramKey: "doustatus",
-      }).then((res) => {
-        console.log(res);
-        this.weightValues = JSON.parse(res.data.doustatus);
-        console.log(this.weightValues);
-        // 显示14个即可
-        let douNum = 14;
-        let startPosition = Math.floor((douNum + 1) / 2);
-        this.weightValues = this.weightValues.slice(
-          startPosition,
-          startPosition + douNum
-        );
-        // 补足精度的0
-        for (let i = 0; i < this.weightValues.length; i++) {
-          // if (this.weightValues[i] == null) {
-          //   this.weightValues[i] = "0.0";
-          // }
-          this.weightValues[i] = this.weightValues[i].toFixed(
-            this.sysConfig["sys_dot_num"]
-          );
-        }
-      });
-    },
-    // 获取面板的数据
+    // 获取面板的数据s
     getPanel() {
       getPanelData({
         devId: uni.getStorageSync("devId"),
       }).then((res) => {
         console.log(res);
         this.realtimeWeight = res.data.weight == null ? 0 : res.data.weight;
-        console.log("小数位数：", this.sysConfig["sys_dot_num"]);
-        this.realtimeWeight = this.realtimeWeight.toFixed(
-          this.sysConfig["sys_dot_num"]
-        );
+        this.realtimeWeight = formatNumber(this.realtimeWeight, this.dotNum);
         this.weight_unit = res.data.sys_unit;
+        uni.setStorageSync("sys_Unit", res.data.sys_unit);
         this.afc = res.data.afc;
         // 处理数据：获取得到的数据res.data是一个字典类型，需要转为parameters的格式，把它的key转为label,value转为value
         const tempParameters = Object.keys(res.data).map((key) => {
@@ -323,6 +389,19 @@ export default {
         const parameters_ = JSON.parse(
           JSON.stringify(tempParameters.slice(0, 9))
         );
+        // 临时处理，对目标值、上限值、下限值做格式化处理
+        parameters_.forEach((item) => {
+          if (
+            item.label == "目标值" ||
+            item.label == "上限值" ||
+            item.label == "下限值"
+          ) {
+            return (item.value = formatNumber(item.value, this.dotNum));
+          }
+          if (item.label == "产品名称") {
+            return (item.value = item.value.slice(0, 4));
+          }
+        });
         this.parameters = parameters_;
         console.log(this.parameters);
       });
@@ -359,19 +438,19 @@ export default {
     },
     // 基本操作按钮
     mainOper(type) {
-      // this.InDeveloping();
-      // return;
       if (type === "run") {
-        this.sendCmd((0x02 << 8) | ctrlno.CTRL_RUN, (0x00 << 8) | 0x00);
+        this.sendCmd((0x02 << 8) | ctrlno.CTL_RUN, (0x00 << 8) | 0x00);
       } else if (type === "stop") {
-        this.sendCmd((0x00 << 8) | ctrlno.CTRL_RUN, (0x00 << 8) | 0x00);
+        this.sendCmd((0x00 << 8) | ctrlno.CTL_RUN, (0x00 << 8) | 0x00);
       } else if (type === "lack_stop") {
         this.sendCmd((0x00 << 8) | ctrlno.CTL_QLTJ, (0x00 << 8) | 0x00);
       }
     },
     // 跳转到页面
     skipTo(pageName) {
-      console.log(pageName);
+      // 先停止读取
+      this.stopReader();
+
       // 如果属于inDevelopPageList列表中的页面，提示正在开发中
       if (this.inDevelopPageList.includes(pageName)) {
         this.InDeveloping();
@@ -394,12 +473,27 @@ export default {
       });
     },
     // 设置按钮的可用状态(在每次操作之后调用)
-    setBtnCtrl() {
-      const status = this.runStatus;
+    setBtnCtrl(status) {
+      console.log("运行状态+", status);
+      let um = uni.getStorageSync("userModel") == "1";
       let run = status.isRun;
+      let b =
+        status.isManualZero || status.isManualEmpty || status.isManualClean;
+      let lack = status.isLackMaterial;
+      let alarm = status.isHaveAlarm;
 
-      this.btnCtrl["menu"] = !run;
-      this.btnCtrl["zero"] = !run;
+      this.btnCtrl["zero"] = !b && !run && !lack && !um;
+
+      this.btnCtrl["menu"] = !b && !run && !lack;
+      this.btnCtrl["run"] = !b && !run && !um;
+      this.btnCtrl["stop"] = !b && run && !um;
+      this.btnCtrl["lack_stop"] = !b && !status.isLackMaterialDisable && !um;
+      // TODO lack的按钮可用性切换逻辑-checked
+      if (lack) {
+        this.btnChecked["lack_stop"] = !this.btnCtrl["lack_stop"];
+      } else {
+        this.btnChecked["lack_stop"] = status.isLackMaterialEnable;
+      }
     },
     // 交换函数
     swap(a, b) {
@@ -411,8 +505,9 @@ export default {
         devId: uni.getStorageSync("devId"),
       })
         .then((res) => {
-          console.log(res);
+          console.log("系统配置", res);
           this.sysConfig = res.data;
+          this.dotNum = parseInt(this.sysConfig["sys_dot_num"]) % 4;
           // 遍历res.data，res.data是一个map，key是属性名，value是属性值，将key和value存储到缓存中
           Object.keys(res.data).forEach((key) => {
             uni.setStorageSync(key, res.data[key]);
@@ -421,6 +516,32 @@ export default {
         .catch((err) => {
           console.log(err);
         });
+    },
+    // 获取douStatus
+    getDouStatus() {
+      readParam({
+        devId: this.devId,
+        paramKey: "cmb_DouStatus",
+      }).then((res) => {
+        console.log(res);
+        // this.doustatus = res.;
+        // console.log(this.doustatus);
+      });
+    },
+    startReader(interval) {
+      this.intervalId = setInterval(() => {
+        refreshCache({
+          devId: uni.getStorageSync("devId"),
+        }).then((res) => {
+          console.log("刷新", res);
+          this.getPanel();
+          this.$refs.douImage.getDouWeight();
+          this.$refs.douImage.refreshDouStatus();
+        });
+      }, interval);
+    },
+    stopReader() {
+      clearInterval(this.intervalId);
     },
   },
 };
@@ -515,47 +636,6 @@ export default {
   font-size: 18px;
 }
 
-.image-section {
-  /* 图片区域样式 */
-  height: auto; /* 将高度改为自适应高度 */
-  min-height: 200px; /* 设置一个最小高度，以确保有足够的空间容纳元素 */
-  background-color: #ccc;
-  border-bottom: 1px solid #ccc;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.small-box-container {
-  /* 小方格容器样式 */
-  display: flex;
-  flex-wrap: wrap;
-  max-width: 480px; /* 调整容器宽度以控制每行显示的方格数量 */
-  margin: 0 auto; /* 水平居中 */
-}
-
-.small-box {
-  /* 小方格样式 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 10px;
-  flex-basis: calc(100% / 5 - 20px); /* 控制每行显示5个方格 */
-  background: #236490;
-}
-
-.box-number {
-  /* 编号样式 */
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.box-weight {
-  /* 数字样式 */
-  font-size: 16px;
-  font-weight: bold;
-}
-
 .middle-section {
   /* 中部样式 */
   border-bottom: 1px solid #ccc;
@@ -591,22 +671,28 @@ export default {
   background-color: #ccc;
 }
 
-.action-btn {
-  flex: 1;
-  min-width: 0;
-  margin: 0 5px;
-  background-color: #fff;
-  color: #333;
-}
+/* .btn-checked {
+  background-color: #569bc6;
+  color: white;
+} */
 
 .left-btn {
   /* 左侧按钮样式 */
   margin-right: 5px;
 }
 
-.right-btn {
+.menu-btn {
+  flex: 1;
+  min-width: 0;
+  margin: 0 5px;
+  background-color: #fff;
+  color: #333;
   /* 右侧按钮样式 */
   margin-left: 5px;
+}
+
+.menu-btn:hover {
+  background-color: #fff;
 }
 
 .separator {

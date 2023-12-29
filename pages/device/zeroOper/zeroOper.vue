@@ -1,26 +1,43 @@
 <template>
   <view class="app">
     <!-- 空白区域用于放置组合秤图片 -->
-    <view class="image-section">
-      <!-- 使用 v-for 渲染小方格 -->
-      <view class="small-box-container">
-        <view v-for="(weight, index) in weightValues" :key="index" class="small-box">
-          <span class="box-number">{{ index + 1 }}</span>
-          <span class="box-weight">{{ weight }}</span>
-        </view>
-      </view>
-    </view>
+    <dou-image
+      class="blank-area"
+      ref="douImage"
+      @dstate="changeDstate"
+      :wideDoustatusMode="true"
+      :clickable="false"
+    ></dou-image>
 
     <!-- 调试按钮区域 -->
     <view class="middle-section">
-
       <!-- 置零操作时的三个按钮 -->
       <view class="button-area">
-        <button class="action-btn" @click="zeroOper('reset')" :disabled="btnCtrl['reset']">置零</button>
-        <button class="action-btn" @click="zeroOper('empty')" :disabled="btnCtrl['empty']">清空</button>
-        <button class="action-btn" @click="zeroOper('clean')" :disabled="btnCtrl['clean']">清洗</button>
+        <button
+          class="action-btn"
+          :class="{ 'btn-checked': btnChecked['reset'] }"
+          @click="zeroOper('reset')"
+          :disabled="!btnCtrl['reset']"
+        >
+          置零
+        </button>
+        <button
+          class="action-btn"
+          :class="{ 'btn-checked': btnChecked['empty'] }"
+          @click="zeroOper('empty')"
+          :disabled="!btnCtrl['empty']"
+        >
+          清空
+        </button>
+        <button
+          class="action-btn"
+          :class="{ 'btn-checked': btnChecked['clean'] }"
+          @click="zeroOper('clean')"
+          :disabled="!btnCtrl['clean']"
+        >
+          清洗
+        </button>
       </view>
-
     </view>
 
     <!-- 最底部 -->
@@ -44,58 +61,88 @@
 </template>
 
 <script>
-import { writeCmd, readParam, getRunStatus } from "@/api/device/business.js";
+import {
+  writeCmd,
+  readParam,
+  getRunStatus,
+  getCmdResult,
+  refreshCache,
+} from "@/api/device/business.js";
 import { ctrlno } from "@/utils/devConstant.js";
+import DouImage from "@/components/douImage/douImage.vue";
+
 export default {
+  components: {
+    DouImage,
+  },
   data() {
     return {
-      deviceName: "设备名称",
-      deviceModel: "设备型号",
       programNum: "01",
       productName: "产品名称",
-      weightValues: [
-        "1.1",
-        "2.2",
-        "3.3",
-        "4.4",
-        "5.5",
-        "6.6",
-        "7.7",
-        "8.8",
-        "9.9",
-        "10.0",
-        "11.1",
-        "12.2",
-        "13.3",
-        "14.4",
-      ],
       btnCtrl: {
-        // 控制按钮是否禁用
+        // 控制按钮是否可用
+        reset: true,
+        empty: true,
+        clean: true,
+      },
+      btnChecked: {
         reset: false,
         empty: false,
         clean: false,
       },
       runStatus: {}, // 设备运行状态
+      shouldContinue: true,
+      intervalId: null,
     };
   },
-  onload() {
-    // 加载斗状态
+  onLoad() {
     this.getDouRunStatus();
+  },
+  onShow() {
+    // 启动刷新器
+    this.startReader(2000);
+  },
+  onHide() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+    console.log("页面隐藏");
+  },
+  beforeDestroy() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   },
   methods: {
     // 向设备发送指令
     sendCmd(cmd, cmdParam) {
-      this.setBtnCtrl();
+      let that = this;
+      let devId = uni.getStorageSync("devId");
+
+      uni.showLoading({
+        title: "指令下发中...",
+        mask: true,
+      });
+
       writeCmd({
-        devName: uni.getStorageSync("devName"),
+        devId: devId,
         cmd: cmd,
         cmdParam: cmdParam,
       }).then((res) => {
         console.log(res);
         if (res.code == 200) {
-          uni.showToast({
-            title: "指令下发成功",
-          });
+          // uni.showToast({
+          //   title: "指令下发成功",
+          // });
+          that.reGetDouRunStatus();
+          // getCmdResult({
+          //   devId: devId,
+          // }).then((resp) => {
+          //   if (resp.code == 200) {
+          //     that.getDouRunStatus();
+          //   }
+          // });
+          uni.hideLoading();
         } else {
           uni.showToast({
             title: "指令下发失败",
@@ -105,15 +152,16 @@ export default {
     },
     // 置零操作按钮
     zeroOper(type) {
-      this.InDeveloping();
-      return;
       if (type === "reset") {
         this.sendCmd(ctrlno.CTL_MANUAL_ZERO, 0x01);
       } else if (type === "empty") {
         this.sendCmd(ctrlno.CTL_MANUAL_EMPTY, 0x01);
+        this.btnChecked.empty = !this.btnChecked.empty;
       } else if (type === "clean") {
         this.sendCmd(ctrlno.CTL_MANUAL_CLEAN, 0x01);
+        this.btnChecked.clean = !this.btnChecked.clean;
       }
+      this.shouldContinue = true;
     },
     // 获取设备运行状态
     getDouRunStatus() {
@@ -121,6 +169,25 @@ export default {
         devId: uni.getStorageSync("devId"),
       }).then((res) => {
         console.log(res);
+        this.runStatus = res.data;
+        this.setBtnCtrl();
+      });
+    },
+    // 递归多次读取设备运行状态-实际上是为了高刷
+    reGetDouRunStatus() {
+      // 递归终止条件
+      if (!this.shouldContinue) return;
+
+      getRunStatus({
+        devId: uni.getStorageSync("devId"),
+      }).then((res) => {
+        console.log(res);
+        this.runStatus = res.data;
+        // this.setBtnCtrl();
+        // 设置延时以递归调用此函数
+        setTimeout(() => {
+          this.getDouRunStatus();
+        }, 1000); // 1000毫秒后再次调用
       });
     },
     // 返回主界面按钮的操作方法
@@ -139,28 +206,39 @@ export default {
     // 设置按钮的可用状态(在每次操作之后调用)
     setBtnCtrl() {
       const status = this.runStatus;
-      let b =
-        status.isManualClean || status.isManualZero || status.isManualEmpty;
-      let run = status.isRun;
-      let lack = status.isLackMaterial;
-      let alarm = status.isHaveAlarm;
 
-      let enabled = !b;
+      let bz = status.isManualZero;
+      let be = status.isManualEmpty;
+      let bc = status.isManualClean;
+      let b = bz || be || bc;
 
-      this.btnCtrl["reset"] = enabled;
-      this.btnCtrl["empty"] = enabled;
-      this.btnCtrl["clean"] = enabled;
-      this.btnCtrl["menu"] = enabled && !lack && !run;
-      this.btnCtrl["zero"] = enabled;
-      this.btnCtrl["combine"] = enabled;
-      this.btnCtrl["tj"] = enabled;
-      this.btnCtrl["zjSetting"] = enabled;
-      this.btnCtrl["timeSetting"] = enabled;
-      this.btnCtrl["camera"] = enabled;
+      this.btnCtrl["reset"] = !b;
+      this.btnCtrl["empty"] = !b || be;
+      this.btnChecked["empty"] = be;
+      this.btnCtrl["clean"] = !b || bc;
+      this.btnChecked["clean"] = bc;
 
-      this.btnCtrl["run"] = enabled && !run;
-      this.btnCtrl["stop"] = enabled && run;
-      this.btnCtrl["lack_stop"] = enabled && status.IsLackMaterialDisable;
+      if (!b) {
+        this.shouldContinue = false;
+      }
+    },
+    changeDstate(e) {
+      console.log("dstate", e);
+      this.dstate = e;
+    },
+    startReader(interval) {
+      this.intervalId = setInterval(() => {
+        refreshCache({
+          devId: uni.getStorageSync("devId"),
+        }).then((res) => {
+          console.log("刷新", res);
+          this.$refs.douImage.getDouWeight();
+          this.$refs.douImage.refreshDouStatus();
+        });
+      }, interval);
+    },
+    stopReader() {
+      clearInterval(this.intervalId);
     },
   },
 };
@@ -297,5 +375,10 @@ export default {
 .program-info-item {
   /* 每个信息项样式 */
   display: flex;
+}
+
+.btn-checked {
+  background-color: #569bc6;
+  color: white;
 }
 </style>

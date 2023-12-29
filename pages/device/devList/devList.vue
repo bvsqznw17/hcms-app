@@ -2,12 +2,30 @@
   <view class="uni-container">
     <!-- 搜索框 -->
     <view>
-      <view :class="['weui-search-bar', inputShowed ? 'weui-search-bar_focusing' : '']" id="searchBar">
+      <view
+        :class="[
+          'weui-search-bar',
+          inputShowed ? 'weui-search-bar_focusing' : '',
+        ]"
+        id="searchBar"
+      >
         <form class="weui-search-bar__form">
           <view class="weui-search-bar__box">
             <i class="weui-icon-search"></i>
-            <input type="text" id="searchInput" class="weui-search-bar__input" placeholder="请输入设备名称" v-model="inputVal" :focus="inputShowed" @input="inputTyping" />
-            <span class="weui-icon-clear" v-if="inputVal.length > 0" @click="clearInput"></span>
+            <input
+              type="text"
+              id="searchInput"
+              class="weui-search-bar__input"
+              placeholder="请输入设备名称"
+              v-model="inputVal"
+              :focus="inputShowed"
+              @input="inputTyping"
+            />
+            <span
+              class="weui-icon-clear"
+              v-if="inputVal.length > 0"
+              @click="clearInput"
+            ></span>
           </view>
           <label class="weui-search-bar__label" @click="showInput">
             <i class="weui-icon-search"></i>
@@ -19,7 +37,11 @@
       <view class="weui-cells searchbar-result" v-if="inputVal.length > 0">
         <block v-for="(item, index) in searchList" :key="index">
           <view class="weui-cell weui-cell_active weui-cell_access">
-            <view @click="chooseRes" :data-devName="item.devName" class="weui-cell__bd weui-cell_primary">
+            <view
+              @click="chooseRes"
+              :data-devName="item.devName"
+              class="weui-cell__bd weui-cell_primary"
+            >
               <view>{{ item.devName }}</view>
             </view>
           </view>
@@ -48,21 +70,22 @@
                 </view>
                 <view>
                   <text class="_label">通信状态：</text>
-                  <text :style="{ color: item.status == 0 ? '#e54d42' : '#13ce66' }">{{
-                    item.statusText
-                  }}</text>
+                  <text
+                    :style="{ color: item.status == 0 ? '#e54d42' : '#13ce66' }"
+                    >{{ item.statusText }}</text
+                  >
                 </view>
                 <view>
                   <text class="_label">目标重量：</text>
-                  <text style="">{{ item.目标重量 || "--" }}</text>
+                  <text style="">{{ item.目标重量 }}</text>
                 </view>
                 <view>
                   <text class="_label">设定速度：</text>
-                  <text style="">{{ item.设定速度 || "--" }}</text>
+                  <text style="">{{ item.设定速度 }}</text>
                 </view>
                 <view>
                   <text class="_label">实际速度：</text>
-                  <text style="">{{ item.平均速度 || "--" }}</text>
+                  <text style="">{{ item.实际速度 }}</text>
                 </view>
                 <!-- 								<view>
 									<text class="_label">健康状态：</text>
@@ -79,8 +102,12 @@
               </view>
               <!-- 右侧 -->
               <view :id="index" :data-ip="item.ip" class="btns">
-                <view class="_btn" @click="switchMode('monitoring', item)">监控模式</view>
-                <view class="_btn" @click="switchMode('operation', item)">操作模式</view>
+                <view class="_btn" @click="switchMode('monitoring', item)"
+                  >监控模式</view
+                >
+                <view class="_btn" @click="switchMode('operation', item)"
+                  >操作模式</view
+                >
               </view>
             </view>
           </view>
@@ -89,9 +116,18 @@
     </view>
     <!-- 连接码验证弹窗 -->
     <uni-popup ref="popup" type="dialog">
-      <uni-popup-dialog mode="input" title="连接码验证" placeholder="请输入连接码" @confirm="dialogConfirm"></uni-popup-dialog>
+      <uni-popup-dialog
+        mode="input"
+        title="连接码验证"
+        placeholder="请输入连接码"
+        @confirm="dialogConfirm"
+      ></uni-popup-dialog>
     </uni-popup>
-    <uni-load-more :status="status" :icon-size="16" :content-text="contentText" />
+    <uni-load-more
+      :status="status"
+      :icon-size="16"
+      :content-text="contentText"
+    />
   </view>
 </template>
 
@@ -128,6 +164,7 @@ export default {
       isMonitoringMode: true,
       isOperationMode: false,
       devId: null,
+      isBusy: false,
     };
   },
   onLoad() {
@@ -138,9 +175,11 @@ export default {
     this.reqDebounce = debounce(this.getSearchList, 500);
   },
   onPullDownRefresh() {
-    console.log("下拉刷新");
     this.reload = true;
     this.getList();
+    setTimeout(function () {
+      uni.stopPullDownRefresh();
+    }, 2000);
   },
   onReachBottom() {
     console.log("到达底部");
@@ -176,7 +215,7 @@ export default {
           this.listData = this.reload ? list : this.listData.concat(list);
           this.status = "more";
         } else {
-          if (this.listData.length <= 0) {
+          if (this.listData.length <= 0 || this.reload) {
             this.listData = list;
           }
           this.status = "noMore";
@@ -258,6 +297,10 @@ export default {
     },
     // 选择模式
     switchMode(mode, item) {
+      uni.showLoading({
+        title: "正在切换模式",
+        mask: true,
+      });
       if (mode == "monitoring") {
         this.isMonitoringMode = true;
         this.isOperationMode = false;
@@ -269,17 +312,20 @@ export default {
       }
       // 检测设备是否在线
       checkDevStatus({
-        devId: uni.getStorageSync("devId"),
+        devId: item.id,
       }).then((res) => {
         console.log(res);
         if (res.msg != 200) {
           if (mode != "monitoring") {
             uni.showToast({
               title: "设备离线，请切换至监控模式",
+              icon: "none",
             });
+            uni.hideLoading();
             return false;
           }
         }
+        uni.hideLoading();
         this.switchModeLogic(item);
       });
     },
@@ -302,9 +348,9 @@ export default {
     // 验证连接码
     verifyCcode(item) {
       verifyCcode({
-        devId: this.devId,
+        devId: item.id,
       }).then((res) => {
-        console.log(res);
+        console.log("连接码", res);
         if (res.data == 1) {
           this.skipToMain();
         } else {
@@ -430,6 +476,10 @@ export default {
 
 ._btn + ._btn {
   margin-top: 69rpx;
+}
+
+.btn:hover {
+  background-color: #1890ff;
 }
 
 .bus-list .bus-list-item.disabled .btns {

@@ -1,8 +1,25 @@
 <template>
   <view>
-    <uni-forms v-if="pvList && pvList.length > 0" label-position="left" labelAlign="center" labelWidth="375upx">
-      <uni-forms-item style="margin-right: 10px;" v-for="(it,idx) in pvList" :key="idx" :name="it.paramName" :label="it.paramName">
-        <uni-easyinput class="inputCss" type="text" v-model="it.paramValue" @change="changeInput(it)" :disabled="it.disabled" />
+    <uni-forms
+      v-if="pvList && pvList.length > 0"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="375upx"
+    >
+      <uni-forms-item
+        style="margin-right: 10px"
+        v-for="(it, idx) in pvList"
+        :key="idx"
+        :name="it.paramName"
+        :label="it.paramName"
+      >
+        <uni-easyinput
+          class="inputCss"
+          type="text"
+          v-model="it.paramValue"
+          @change="changeInput(it)"
+          :disabled="it.disabled"
+        />
       </uni-forms-item>
     </uni-forms>
     <!-- 暂无数据页面 -->
@@ -11,7 +28,15 @@
     </view>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">保存</button>
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveData()"
+        :disabled="userModel == 1"
+      >
+        保存
+      </button>
     </view>
   </view>
 </template>
@@ -20,12 +45,11 @@
 import { listForParam, updateParamValue } from "@/api/device/paramValue.js";
 import { deepCopy, formatNumber } from "@/utils/util.js";
 import { checkDevStatus } from "@/api/device/business.js";
-import { listSettings } from "@/api/device/sysSettings.js";
 export default {
   data() {
     return {
       queryParams: {
-        devName: null,
+        devId: null,
         paramSubType: 1,
       },
       pvList: [],
@@ -38,8 +62,7 @@ export default {
   },
   onLoad(opt) {
     this.userModel = uni.getStorageSync("userModel");
-    this.queryParams.devName = uni.getStorageSync("devName");
-    // this.queryParams.devName = opt.devName;
+    this.queryParams.devId = uni.getStorageSync("devId");
     this.queryParams.paramSubType = opt.param ? opt.param : 4;
     this.getList();
   },
@@ -58,28 +81,19 @@ export default {
       });
     },
     getRuleList(pvList) {
-      listSettings({
-        devName: this.queryParams.devName,
-        pageNum: 1,
-        pageSize: 100,
-      }).then((res) => {
-        console.log(res);
-        this.pvList = pvList;
-        ruleList = res.rows;
-        // 遍历ruleList，如果paramKey=="sys_QPDGSel" 且 paramValue==0，则将pvList中的paramKey in QPDGRelativeKey的项的disabled设置为true
-        ruleList.map((it, idx) => {
-          if (it.paramKey == "sys_QPDGSel" && it.paramValue == 1) {
-            this.pvList.map((item, index) => {
-              if (this.QPDGRelativeKey.indexOf(item.paramKey) != -1) {
-                console.log("failed");
-                item.disabled = true;
-                return item;
-              }
-            });
+      this.pvList = pvList;
+      let sys_QPDGSel = uni.getStorageSync("sys_QPDGSel");
+      console.log("强排导管选择", sys_QPDGSel);
+      if (sys_QPDGSel == 0) {
+        this.pvList.map((item, index) => {
+          if (this.QPDGRelativeKey.indexOf(item.paramKey) != -1) {
+            console.log("failed");
+            item.disabled = true;
+            return item;
           }
         });
-        console.log(this.pvList);
-      });
+      }
+      console.log(this.pvList);
     },
     // input修改事件
     changeInput(it) {
@@ -132,7 +146,7 @@ export default {
           });
           return;
         }
-        uni.setStorageSync("curDev", this.queryParams.devName);
+
         let tabData = data || this.pvList;
         // 遍历tabData，判断是否在updIdMap中，在就修改
         let keys = Object.keys(this.updIdMap);

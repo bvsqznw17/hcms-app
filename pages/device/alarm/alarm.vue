@@ -1,11 +1,14 @@
 <template>
   <view class="app">
-
     <!-- 小方格和分割线 -->
     <view class="small-box-section">
       <!-- 小方格 -->
       <view class="small-box-container">
-        <view v-for="(weight, index) in weightValues" :key="index" class="small-box">
+        <view
+          v-for="(weight, index) in weightValues"
+          :key="index"
+          class="small-box"
+        >
           <span class="box-number">{{ index + 1 }}</span>
           <span class="box-weight">{{ weight }}</span>
         </view>
@@ -17,7 +20,6 @@
 
     <!-- 单选项和按钮 -->
     <view class="options-section">
-
       <!-- 按钮 -->
       <view class="button-area">
         <uni-button class="action-btn" @click="JLD">进料斗</uni-button>
@@ -46,7 +48,6 @@
         </view>
       </view>
     </view>
-
   </view>
 </template>
 

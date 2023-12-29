@@ -1,16 +1,21 @@
 <template>
   <view>
-    <uni-forms class="form-style" :value="form" label-position="left" labelAlign="center" labelWidth="375upx" :border="isBorder">
-      <!-- 			<uni-forms-item name="portNum" label="端口号">
-				<uni-easyinput disabled class="inputCss" type="text" v-model="form.portNum" />
-			</uni-forms-item> -->
+    <uni-forms
+      class="form-style"
+      :value="form"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="375upx"
+      :border="isBorder"
+    >
       <!-- 弹框 -->
       <uni-forms-item name="func" label="功能">
-        <picker :range="funcList" :range-key="'name'" @change="bindData('func', $event.detail.value)">
-          <view class="picker-style">{{
-               funcList[funcIndex].name
-            }}
-          </view>
+        <picker
+          :range="funcList"
+          :range-key="'name'"
+          @change="bindData('func', $event.detail.value)"
+        >
+          <view class="picker-style">{{ funcList[funcIndex].name }} </view>
         </picker>
       </uni-forms-item>
       <!-- 单选框 -->
@@ -23,7 +28,13 @@
     </uni-forms>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveData()"
+        :disabled="userModel == 1"
+      >
         保存
       </button>
     </view>
@@ -50,7 +61,7 @@ export default {
         status: false,
       },
       queryParams: {
-        devName: null,
+        devId: null,
         ip: null,
         paramSubType: 6,
         pageNum: 1,
@@ -159,7 +170,6 @@ export default {
           });
           return;
         }
-        uni.setStorageSync("curDev", this.form.devName);
         let pv = this.form.func;
         // 设置func的params，这里只有一个参数param，代表端口号
         pv.params = {

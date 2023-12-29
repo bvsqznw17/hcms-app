@@ -9,12 +9,8 @@ export default {
     this.initApp();
   },
   onHide() {
-  	console.log("应用进入后台");
-  	// 将该用户正在操作的设备的操作状态改为0
-  	let curDev = uni.getStorageSync("curDev");
-  	// changeDevStatus({ devName: curDev, operateStatus: 0 }).then((res) => {
-  	//   console.log(res);
-  	// });
+    console.log("应用进入后台");
+    // 将该用户正在操作的设备的操作状态改为0
   },
   methods: {
     // 初始化应用

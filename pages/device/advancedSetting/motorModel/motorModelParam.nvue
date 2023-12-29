@@ -87,7 +87,6 @@ import { checkDevStatus } from "@/api/device/business.js";
 		},
 		onLoad() {
 			this.userModel = uni.getStorageSync("userModel");
-			this.queryParams.devName = uni.getStorageSync('devName')
 			this.queryParams.mainModel = uni.getStorageSync('mainModel')
 			this.queryParams.subModel = uni.getStorageSync('subModel')
 			uni.showLoading({
@@ -95,7 +94,7 @@ import { checkDevStatus } from "@/api/device/business.js";
 			})
 			// 加载参数面板数据之前，先测试一下设备是否在线
 			checkDevStatus({
-				devName: this.queryParams.devName
+				devId: uni.getStorageSync('devId'),
 			}).then(res => {
 				if (res.msg != 200) {
 					uni.hideLoading()
@@ -315,7 +314,7 @@ import { checkDevStatus } from "@/api/device/business.js";
 				console.log(this.$refs)
 				// 检测设备是否在线
 				checkDevStatus({
-					devName: this.queryParams.devName
+					devId: uni.getStorageSync("devId")
 				}).then(res => {
 					if (res.msg != 200) {
 						uni.showToast({
@@ -325,7 +324,7 @@ import { checkDevStatus } from "@/api/device/business.js";
 						});
 						return;
 					}
-					uni.setStorageSync("curDev", this.queryParams.devName);
+					
 					this.pageList[pageId].savePageData()
 				})
 			},

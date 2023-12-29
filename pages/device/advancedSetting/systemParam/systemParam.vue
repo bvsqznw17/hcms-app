@@ -1,14 +1,50 @@
 <template>
   <view>
-    <uni-forms v-if="pvList && pvList.length > 0" label-position="left" labelAlign="center" labelWidth="375upx">
+    <uni-forms
+      v-if="pvList && pvList.length > 0"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="375upx"
+    >
       <template v-for="(it, idx) in pvList">
-        <uni-forms-item style="margin-right: 10px;" :key="'picker-' + idx" :name="it.paramName" :label="it.paramName" v-if="it.pbList != undefined">
-          <picker @change="bindPickerChange(it, $event)" :value="pbIndexs[it.paramKey]" :ref="'pb' + idx" :range="it.pbList" :disabled="it.disabled" @click.stop="handleClick">
-            <uni-easyinput type="text" :styles="inputStyles" v-model="it.pbList[pbIndexs[it.paramKey]]" :clearable="true" :disabled="true"></uni-easyinput>
+        <uni-forms-item
+          style="margin-right: 10px"
+          :key="'picker-' + idx"
+          :name="it.paramName"
+          :label="it.paramName"
+          v-if="it.pbList != undefined"
+        >
+          <picker
+            @change="bindPickerChange(it, $event)"
+            :value="pbIndexs[it.paramKey]"
+            :ref="'pb' + idx"
+            :range="it.pbList"
+            :disabled="it.disabled"
+            @click.stop="handleClick"
+          >
+            <uni-easyinput
+              type="text"
+              :styles="inputStyles"
+              v-model="it.pbList[pbIndexs[it.paramKey]]"
+              :clearable="true"
+              :disabled="true"
+            ></uni-easyinput>
           </picker>
         </uni-forms-item>
-        <uni-forms-item style="margin-right: 10px" :key="'input-' + idx" :name="it.paramName" :label="it.paramName" v-else>
-          <uni-easyinput class="inputCss" type="text" v-model="it.paramValue" :disabled="it.disabled" @change="changeInput(it)" />
+        <uni-forms-item
+          style="margin-right: 10px"
+          :key="'input-' + idx"
+          :name="it.paramName"
+          :label="it.paramName"
+          v-else
+        >
+          <uni-easyinput
+            class="inputCss"
+            type="text"
+            v-model="it.paramValue"
+            :disabled="it.disabled"
+            @change="changeInput(it)"
+          />
         </uni-forms-item>
       </template>
     </uni-forms>
@@ -18,7 +54,13 @@
     </view>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveData()"
+        :disabled="userModel == 1"
+      >
         保存
       </button>
     </view>
@@ -28,8 +70,7 @@
 <script>
 import { listForParam, updateParamValue } from "@/api/device/paramValue.js";
 import { deepCopy, formatNumber, trimPoint } from "@/utils/util.js";
-import { checkDevStatus } from "@/api/device/business.js";
-import { listSettings, updateSettings } from "@/api/device/sysSettings.js";
+import { checkDevStatus, getSysConfig } from "@/api/device/business.js";
 import popPicker from "@/components/popPicker";
 export default {
   components: {
@@ -38,13 +79,12 @@ export default {
   data() {
     return {
       queryParams: {
-        devName: null,
+        devId: null,
         pageNum: 1,
         pageSize: 50,
       },
       pvList: [],
       updIdMap: {},
-      strValidParamName: ["产品名称"],
       preData: {},
       userModel: 1,
       pbMap: {
@@ -64,6 +104,7 @@ export default {
         "sys_VibrationSen",
         "sys_QP_2CJL",
         "sys_QPDGSel",
+        "sys_PLCJMS",
       ],
       pbIndexs: {
         sys_Unit: 0,
@@ -78,16 +119,21 @@ export default {
         sys_VibrationSen: 0,
         sys_QP_2CJL: 0,
         sys_QPDGSel: 0,
+        sys_PLCJMS: 0,
       },
       inputStyles: {
         borderColor: "#2979FF",
         disableColor: "#5e9aff",
       },
+      dotNum: 0,
     };
   },
   onLoad(opt) {
     this.userModel = uni.getStorageSync("userModel");
-    this.queryParams.devName = opt.devName;
+    this.dotNum = uni.getStorageSync("sys_dot_num");
+    this.dotNum = parseInt(this.dotNum) % 4;
+    this.queryParams.devId = uni.getStorageSync("devId");
+    this.queryParams.devId = uni.getStorageSync("devId");
     this.queryParams.paramSubType = opt.param;
     this.getList();
   },
@@ -108,16 +154,21 @@ export default {
     getRuleList(pvList) {
       let pbKeyList = Object.keys(this.pbIndexs);
 
-      listSettings(this.queryParams).then((res) => {
+      getSysConfig({
+        devId: this.queryParams.devId,
+      }).then((res) => {
+        console.log("getSysConfig", res);
         pvList.map((item, index) => {
-          res.rows.map((it, idx) => {
-            if (item.paramKey == it.paramKey) {
+          Object.keys(res.data).forEach((key) => {
+            if (item.paramKey == key) {
               // 如果paramKey在baseSwitchKeyList中，设置item的pbList为baseSwitch
               if (this.baseSwitchKeyList.indexOf(item.paramKey) != -1) {
                 item.pbList = this.baseSwitch;
               } else if (pbKeyList.indexOf(item.paramKey) != -1) {
-                item.pbList = this.pbMap[it.paramKey];
+                item.pbList = this.pbMap[key];
               }
+              // 更新pbIndexs
+              this.pbIndexs[item.paramKey] = parseInt(item.paramValue);
             }
           });
         });
@@ -130,35 +181,30 @@ export default {
     changeInput(it) {
       // 校验修改的值是否超出范围并提示
       console.log(it);
-      if (it.paramName.indexOf(this.strValidParamName) == -1) {
-        let min = formatNumber(it.minV, it.decimalNum);
-        let max = formatNumber(it.maxV, it.decimalNum);
-        let pv = +it.paramValue;
-        if ((pv != 0 && !pv) || pv > +max || pv < +min) {
-          uni.showToast({
-            title: it.paramName + "取值范围在" + min + "~" + max,
-            icon: "none",
-            duration: 3000,
-          });
-          // 将修改的值改回原来的值
-          this.preData.map((item, index) => {
-            if (item.paramName == it.paramName) {
-              it.paramValue = item.paramValue;
-            }
-          });
-          this.pvList = this.pvList.map((item, index) => {
-            if (item.paramName == it.paramName) {
-              item.paramValue = it.paramValue;
-            }
-            return item;
-          });
-        } else {
-          // 将修改后的值做格式化处理，保留小数点后几位，按照decimalNum
-          it.paramValue = (+it.paramValue).toFixed(it.decimalNum);
-          this.updIdMap[it.regAddr] = it.regAddr;
-          this.preData = deepCopy(this.pvList);
-        }
+      let min = formatNumber(it.minV, it.decimalNum);
+      let max = formatNumber(it.maxV, it.decimalNum);
+      let pv = +it.paramValue;
+      if ((pv != 0 && !pv) || pv > +max || pv < +min) {
+        uni.showToast({
+          title: it.paramName + "取值范围在" + min + "~" + max,
+          icon: "none",
+          duration: 3000,
+        });
+        // 将修改的值改回原来的值
+        this.preData.map((item, index) => {
+          if (item.paramName == it.paramName) {
+            it.paramValue = item.paramValue;
+          }
+        });
+        this.pvList = this.pvList.map((item, index) => {
+          if (item.paramName == it.paramName) {
+            item.paramValue = it.paramValue;
+          }
+          return item;
+        });
       } else {
+        // 将修改后的值做格式化处理，保留小数点后几位，按照decimalNum
+        it.paramValue = (+it.paramValue).toFixed(it.decimalNum);
         this.updIdMap[it.regAddr] = it.regAddr;
         this.preData = deepCopy(this.pvList);
       }
@@ -177,7 +223,7 @@ export default {
           });
           return;
         }
-        uni.setStorageSync("curDev", this.queryParams.devName);
+
         let tabData = data || this.pvList;
         // 遍历tabData，判断是否在updIdMap中，在就修改
         let keys = Object.keys(this.updIdMap);
@@ -187,33 +233,27 @@ export default {
         tabData.map((it, idx) => {
           if (it.regAddr in this.updIdMap) {
             // 对小数点反格式化后再进行存储
-            let oldValue = it.paramValue;
-            it.paramValue = trimPoint(it.paramValue);
-            console.log("更新");
+            it.paramValue = parseInt(
+              it.paramValue * Math.pow(10, it.decimalNum)
+            );
+            console.log(it.paramValue);
             updateParamValue(it).then((res) => {
               num++;
               console.log(res);
               // 将修改后的值改为原来的值
-              it.paramValue = oldValue;
+              it.paramValue = formatNumber(it.paramValue, this.baseDecimalNum);
               if (num == len) {
                 this.updIdMap = {};
                 uni.showModal({
                   content: "保存成功",
                   showCancel: false,
                 });
-                // 同步更新system设置
-                // let re = this.updateSysSettings(it);
+                // 更新一下缓存中的系统设置
+                uni.setStorageSync(it.paramKey, it.paramValue);
               }
             });
           }
         });
-      });
-    },
-    // 更新系统设置
-    async updateSysSettings(it) {
-      console.log(it);
-      res = await updateSettings(it).then((res) => {
-        console.log(res.code == 200);
       });
     },
     bindPickerChange(it, e) {

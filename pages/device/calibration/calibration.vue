@@ -1,15 +1,17 @@
 <template>
   <view class="app">
-
     <!-- 小方格和分割线 -->
     <view class="small-box-section">
       <!-- 小方格 -->
-      <view class="small-box-container">
-        <view v-for="(weight, index) in weightValues" :key="index" class="small-box">
-          <span class="box-number">{{ index + 1 }}</span>
-          <span class="box-weight">{{ weight }}</span>
-        </view>
-      </view>
+      <DouImage
+        ref="douImage"
+        :followDouStatus="false"
+        :zzjState="zzjState"
+        :showWeightLabel="isCkAll"
+        @boxClicked="boxClicked"
+        @zzClicked="zzClicked"
+        @changeWeightValues="changeWeightValues"
+      ></DouImage>
 
       <!-- 分割线 -->
       <view class="separator"></view>
@@ -19,41 +21,65 @@
     <view class="weight">
       <view class="weight-value-container">
         <span class="weight-value">{{ realtimeWeight }}</span>
-        <span class="weight-unit">g</span>
+        <span class="weight-unit">{{ weight_unit }}</span>
       </view>
     </view>
 
     <!-- 振动单选项 -->
     <radio-group class="uni-flex uni-row radio-group rg" @change="radioChange1">
-      <radio value="1" class="radio">振动1</radio>
-      <radio value="2" class="radio">振动2</radio>
-      <radio value="3" class="radio">振动3</radio>
-      <radio value="4" class="radio">振动4</radio>
+      <radio value="1" class="radio" :disabled="zdno[0]">振动1</radio>
+      <radio value="2" class="radio" :disabled="zdno[1]">振动2</radio>
+      <radio value="3" class="radio" :disabled="zdno[2]">振动3</radio>
+      <radio value="4" class="radio" :disabled="zdno[3]">振动4</radio>
     </radio-group>
 
     <view class="input-container">
-      <label class="input-label">砝码重量:
-        <input type="text" v-model="weightValue" class="input-field">
+      <label class="input-label"
+        >砝码重量:
+        <input
+          type="text"
+          v-model="weightPvs.sys_nov_czd"
+          class="input-field"
+          :disabled="weightDisable"
+        />
       </label>
-      <label class="input-label">满量程:
-        <input type="text" v-model="capacityValue" class="input-field">
+      <label class="input-label"
+        >满量程:
+        <input
+          type="text"
+          v-model="weightPvs.sys_max_czd"
+          class="input-field"
+          :disabled="weightDisable"
+        />
       </label>
     </view>
 
     <!-- 单选项和按钮 -->
     <view class="options-section">
       <!-- 单选项 -->
-      <radio-group class="uni-flex uni-row radio-group rg" @change="radioChange2">
-        <radio value="1" class="radio">初始标定</radio>
-        <radio value="2" class="radio">重新标定</radio>
-        <radio value="3" class="radio">标定所有</radio>
+      <radio-group
+        style="flex: 2"
+        class="uni-flex uni-row radio-group rg"
+        @change="radioChange2"
+      >
+        <radio value="0" class="radio">初始标定</radio>
+        <radio value="1" class="radio" :checked="true" :disabled="false"
+          >重新标定</radio
+        >
       </radio-group>
+      <checkbox-group class="ckbox" @change="selAllBox">
+        <label> <checkbox value="1" :checked="isCkAll" />标定所有 </label>
+      </checkbox-group>
+    </view>
 
-      <!-- 按钮 -->
-      <view class="button-area">
-        <uni-button class="action-btn" @click="zero">置零</uni-button>
-        <uni-button class="action-btn" @click="full">满度</uni-button>
-      </view>
+    <!-- 按钮 -->
+    <view class="button-area">
+      <button class="action-btn" @click="zero" :disabled="disbtn['zero']">
+        置零
+      </button>
+      <button class="action-btn" @click="full" :disabled="disbtn['full']">
+        满度
+      </button>
     </view>
 
     <!-- 最底部 -->
@@ -73,7 +99,11 @@
         </view>
       </view>
     </view>
-
+    <simple-process
+      :show="showProgress"
+      :message="processMsg"
+      :progress="progress"
+    ></simple-process>
   </view>
 </template>
 
@@ -81,51 +111,102 @@
 import {
   writeCmd,
   readParam,
-  getRunStatus,
+  readParams,
   getCmdResult,
+  refreshCache,
 } from "@/api/device/business.js";
 import { ctrlno } from "@/utils/devConstant.js";
+import DouImage from "@/components/douImage/douImage.vue";
+import { formatNumber } from "@/utils/util.js";
+import simpleProcess from "@/components/simpleProgress/simpleProgress";
 export default {
+  components: {
+    DouImage,
+    simpleProcess,
+  },
   data() {
     return {
-      realtimeWeight: "0.5", // 实时重量示例值
-      weightValue: "", // 砝码重量
-      capacityValue: "", // 满量程
+      realtimeWeight: "--",
+      weight_unit: "g",
       programNum: "01",
       productName: "产品名称",
-      weightValues: [
-        "1.1",
-        "2.2",
-        "3.3",
-        "4.4",
-        "5.5",
-        "6.6",
-        "7.7",
-        "8.8",
-        "9.9",
-        "10.0",
-        "11.1",
-        "12.2",
-        "13.3",
-        "14.4",
-      ],
-      zdOption: "1", // 振动选项
-      calibrationOption: "1", // 标定选项
-      boxIndex: 0, // 选中的盒子
+      dotNum: 0,
+      zdOption: "1",
+      curseldn: -1, // 选中的斗
+      doustatus: 0,
+      isCkAll: false, // 是否全选
+      bdState: "1", // 标定状态 0 是初始标定 1 是重新标定
+      zzjState: 0, // 主振机状态-颜色 0 灰色 1 蓝色 2 红色
+      c_anew: true, // 是否重新标定
+      showWeightLabel: false, // 是否显示重量标签
+      disbtn: {
+        zero: false,
+        full: true,
+      },
+      zdno: [true, true, true, true], // 是否禁用振动单选
+      weightValues: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      weightDisable: true,
+      progress: 0, // 进度条进度
+      showProgress: false,
+      processMsg: "",
+      intervalId: null,
+      intervalId2: null,
+      weightPvs: {
+        sys_nov_czd: 0,
+        sys_max_czd: 0,
+        sys_nov_zzj: 0,
+        sys_max_zzj: 0,
+        sys_nov_zd: 0,
+        sys_max_zd: 0,
+      },
     };
   },
+  mounted() {
+    this.dotNum = uni.getStorageSync("sys_dot_num");
+    this.weight_unit = uni.getStorageSync("sys_Unit");
+    this.dotNum = parseInt(this.dotNum) % 4;
+    console.log(this.dotNum);
+    // this.getDouWeight();
+  },
+  onShow() {
+    if (this.intervalId == null) {
+      // 启动刷新器
+      this.startReader(1000);
+    }
+  },
+  onHide() {
+    this.stopReader();
+    console.log("页面隐藏");
+  },
+  beforeDestroy() {
+    // 清除定时器，避免内存泄漏
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
+    this.stopReader();
+  },
+
   methods: {
     // 向设备发送指令
     sendCmd(cmd, cmdParam) {
+      let devId = uni.getStorageSync("devId");
+      // uni.showLoading({
+      //   title: "执行中",
+      //   mask: true,
+      // });
       writeCmd({
-        devName: uni.getStorageSync("devName"),
+        devId: devId,
         cmd: cmd,
         cmdParam: cmdParam,
       }).then((res) => {
         console.log(res);
         if (res.code == 200) {
-          uni.showToast({
-            title: "指令下发成功",
+          getCmdResult({
+            devId: devId,
+          }).then((resp) => {
+            if (resp.code == 200) {
+              this.refreshDouWeight();
+            }
           });
         } else {
           uni.showToast({
@@ -134,29 +215,113 @@ export default {
         }
       });
     },
-    showMenuBtns() {
-      // 控制显示/隐藏菜单按钮的方法
+    changeWeightValues(weightValues) {
+      console.log("重量值", weightValues);
+      this.weightValues = weightValues;
+      this.realtimeWeight =
+        this.curseldn > 0 ? weightValues[this.curseldn - 1] : "--";
+    },
+    // 读取斗状态-用于本页面的重量显示
+    getDouWeight() {
+      readParam({
+        devId: uni.getStorageSync("devId"),
+        paramKey: "doustatus",
+      }).then((res) => {
+        console.log("斗状态", res);
+        if (!res.data) return;
+        let doustatus = JSON.parse(res.data.doustatus);
+
+        for (let i = 0; i < doustatus.length; i++) {
+          doustatus[i] = formatNumber(doustatus[i], this.dotNum);
+        }
+        this.doustatus = doustatus;
+
+        // 显示14个即可
+        let douNum = 14;
+        let startPosition = Math.floor((douNum + 1) / 2);
+        this.weightValues = doustatus.slice(
+          startPosition,
+          startPosition + douNum
+        );
+        console.log("重量数组", this.weightValues);
+      });
+    },
+    // 读取砝码重量和量程
+    readWeightAndRangeParam() {
+      readParams({
+        devId: uni.getStorageSync("devId"),
+        paramKeys: JSON.stringify(Object.keys(this.weightPvs)),
+      }).then((res) => {
+        console.log(res);
+        this.weightPvs = res.data;
+        // 对数组的数据进行格式化
+        Object.keys(this.weightPvs).forEach((key) => {
+          this.weightPvs[key] = formatNumber(this.weightPvs[key], this.dotNum);
+        });
+      });
     },
     // 置零操作方法
-    zero() {
-      this.InDeveloping();
-      const douNumber = this.boxIndex + 1;
+    async zero() {
+      const douNumber = this.curseldn;
+      if (this.isCkAll) douNumber = 0;
+      if (douNumber < 0) {
+        uni.showToast({
+          title: "请选择斗",
+        });
+        return;
+      }
+
       this.sendCmd(ctrlno.CTL_DOU_CALIZERO, douNumber);
+      this.startProgress(3);
+
+      this.setEnabledZero(true);
+
+      if (this.c_anew) {
+        setTimeout(() => {
+          this.startProgress(2);
+          this.setEnabledZero(false);
+        }, 3050);
+      }
     },
     // 满度操作方法
     full() {
-      this.InDeveloping();
-      const douNumber = this.boxIndex + 1;
+      const douNumber = this.curseldn;
+      if (this.isCkAll) douNumber = 0;
+      if (douNumber < 0) {
+        uni.showToast({
+          title: "请选择斗",
+        });
+        return;
+      }
+
+      this.startProgress(3);
       this.sendCmd(ctrlno.CTL_DOU_CALIFULL, douNumber);
+
+      this.setEnabledZero(false);
     },
     radioChange1(e) {
       console.log(e);
       this.zdOption = e.detail.value;
-      this.sendCmd(ctrlno.CTL_SEZ, e);
+      // this.sendCmd(ctrlno.CTL_SEZ, e);
     },
     radioChange2(e) {
+      this.bdState = e.detail.value;
+      this.c_anew = this.bdState == "1";
+    },
+    selAllBox(e) {
       console.log(e);
-      this.calibrationOption = e.detail.value;
+      this.isCkAll = e.detail.value.length > 0;
+      this.selAllDou(this.isCkAll);
+    },
+    selAllDou(b) {
+      console.log("selAllDou", b);
+      // if (this.isCkAll == b) {
+      //   return;
+      // }
+      this.setBoxColor(null, b ? 7 : 0);
+      this.zzjState = 0;
+      this.curseldn = -1;
+      this.refreshDouWeight();
     },
     // 返回主界面按钮的操作方法
     backMain() {
@@ -171,9 +336,87 @@ export default {
         icon: "none",
       });
     },
-    clickBox(index) {
-      this.boxIndex = index;
+    boxClicked(index) {
+      let douNumber = index + 1;
+      this.realtimeWeight = this.weightValues[index];
+      if (douNumber == this.curseldn) {
+        this.sendCmd(ctrlno.CTL_SEZ, douNumber);
+        return false;
+      }
+      this.selAllDou(false);
+      this.setBoxColor([index], 7);
+      this.curseldn = douNumber;
+      this.weightDisable = false;
+      this.realtimeWeight = this.weightValues[index];
     },
+    zzClicked() {
+      this.isCkAll = false;
+      this.selAllDou(false);
+      this.zzjState = 2;
+      this.curseldn = -1;
+      this.weightDisable = false;
+      console.log(this.doustatus);
+      this.realtimeWeight = this.doustatus[14];
+    },
+    // 设置小方格颜色
+    setBoxColor(arr, ckey) {
+      if (arr != null) {
+        this.$refs.douImage.setBoxColor(arr, ckey);
+      } else {
+        this.$refs.douImage.setBoxColor(
+          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+          ckey
+        );
+      }
+    },
+    setEnabledZero(b) {
+      this.disbtn["zero"] = b;
+      this.disbtn["full"] = !b;
+      // this.c_anew = !b;
+    },
+    refreshDouWeight() {
+      // this.getDouWeight();
+      this.readWeightAndRangeParam();
+      this.$refs.douImage.refreshDouWeight();
+    },
+    updateProgress(percent) {
+      if (percent < 0) {
+        percent = 0;
+      } else if (percent > 100) {
+        percent = 100;
+      }
+      this.progress = percent;
+      this.processMsg = "进度" + percent + "%";
+    },
+    startProgress(totalSeconds) {
+      this.showProgress = true;
+      let percent = 1;
+      let intervalId = setInterval(() => {
+        this.updateProgress(percent++);
+        if (percent > 100) {
+          clearInterval(intervalId);
+          this.showProgress = false;
+        }
+      }, totalSeconds * 10);
+    },
+    startReader(interval) {
+      this.intervalId2 = setInterval(() => {
+        refreshCache({
+          devId: uni.getStorageSync("devId"),
+        }).then((res) => {
+          console.log("刷新", res);
+          this.$refs.douImage.getDouWeight();
+        });
+      }, interval);
+    },
+    stopReader() {
+      clearInterval(this.intervalId2);
+    },
+    // refreshUI() {
+    //   let d = this.isCkAll || (this.curseldn >= 1 && this.curseldn <= 14);
+    //   let g = !d && this.curseldn >= 0;
+    //   let z = !d && this.curseldn == -1;
+    // },
   },
 };
 </script>
@@ -206,7 +449,8 @@ export default {
   border-radius: 5px;
   font-size: 32px;
   font-weight: bold;
-  color: #39ff14; /* 荧光绿色 */
+  color: #39ff14;
+  /* 荧光绿色 */
   position: relative;
   /* margin-bottom: 10px; */
 }
@@ -239,36 +483,6 @@ export default {
   border-top: 1px solid #ccc;
 }
 
-.small-box-container {
-  /* 小方格容器样式 */
-  display: flex;
-  flex-wrap: wrap;
-  max-width: 480px; /* 调整容器宽度以控制每行显示的方格数量 */
-  margin: 0 auto; /* 水平居中 */
-}
-
-.small-box {
-  /* 小方格样式 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 10px;
-  flex-basis: calc(100% / 5 - 20px); /* 控制每行显示5个方格 */
-  background: #236490;
-}
-
-.box-number {
-  /* 编号样式 */
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.box-weight {
-  /* 数字样式 */
-  font-size: 16px;
-  font-weight: bold;
-}
-
 .separator {
   /* 分割区域样式 */
   height: 1px;
@@ -279,7 +493,8 @@ export default {
 .options-section {
   /* 单选项和按钮的区域样式 */
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center; /* 确保垂直居中对齐 */
 }
 
 .radio-options {
@@ -345,7 +560,8 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 10px;
-  background-color: #f5f5f5; /* Adjust the background color as per your design */
+  background-color: #f5f5f5;
+  /* Adjust the background color as per your design */
   border-top: 1px solid #ccc;
 }
 
@@ -369,5 +585,11 @@ export default {
 .program-info-item {
   /* 每个信息项样式 */
   display: flex;
+}
+
+.ckbox {
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+  padding: 10px;
 }
 </style>

@@ -1,14 +1,48 @@
 <template>
   <view>
-    <uni-forms v-if="pvList && pvList.length > 0" label-position="left" labelAlign="center" labelWidth="375upx">
+    <uni-forms
+      v-if="pvList && pvList.length > 0"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="375upx"
+    >
       <template v-for="(it, idx) in pvList">
-        <uni-forms-item style="margin-right: 10px" :key="'picker-' + idx" :name="it.paramName" :label="it.paramName" v-if="it.pbList != undefined">
-          <picker @change="bindPickerChange(it, $event)" :value="pbIndexs[it.paramKey]" :ref="'pb' + idx" :range="it.pbList" :disabled="it.disabled">
-            <uni-easyinput type="text" v-model="it.pbList[pbIndexs[it.paramKey]]" :clearable="false" :disabled="it.disabled"></uni-easyinput>
+        <uni-forms-item
+          style="margin-right: 10px"
+          :key="'picker-' + idx"
+          :name="it.paramName"
+          :label="it.paramName"
+          v-if="it.pbList != undefined"
+        >
+          <picker
+            @change="bindPickerChange(it, $event)"
+            :value="pbIndexs[it.paramKey]"
+            :ref="'pb' + idx"
+            :range="it.pbList"
+            :disabled="it.disabled"
+          >
+            <uni-easyinput
+              type="text"
+              v-model="it.pbList[pbIndexs[it.paramKey]]"
+              :clearable="false"
+              :disabled="it.disabled"
+            ></uni-easyinput>
           </picker>
         </uni-forms-item>
-        <uni-forms-item style="margin-right: 10px" :key="'input-' + idx" :name="it.paramName" :label="it.paramName" v-else>
-          <uni-easyinput class="inputCss" type="text" v-model="it.paramValue" :disabled="it.disabled" @change="changeInput(it)" />
+        <uni-forms-item
+          style="margin-right: 10px"
+          :key="'input-' + idx"
+          :name="it.paramName"
+          :label="it.paramName"
+          v-else
+        >
+          <uni-easyinput
+            class="inputCss"
+            type="text"
+            v-model="it.paramValue"
+            :disabled="it.disabled"
+            @change="changeInput(it)"
+          />
         </uni-forms-item>
       </template>
     </uni-forms>
@@ -18,7 +52,13 @@
     </view>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveData()"
+        :disabled="userModel == 1"
+      >
         保存
       </button>
     </view>
@@ -34,7 +74,7 @@ export default {
   data() {
     return {
       queryParams: {
-        devName: null,
+        devId: null,
         paramSubType: 1,
         pageNum: 1,
         pageSize: 50,
@@ -63,7 +103,7 @@ export default {
   },
   onLoad(opt) {
     this.userModel = uni.getStorageSync("userModel");
-    this.queryParams.devName = opt.devName;
+    this.queryParams.devId = uni.getStorageSync("devId");
     this.queryParams.paramSubType = opt.param;
     this.getList();
   },
@@ -96,6 +136,7 @@ export default {
         pvList.map((item, index) => {
           if (pbKeyList.indexOf(item.paramKey) != -1) {
             item.pbList = this.pbMap[item.paramKey];
+            this.pbIndexs[item.paramKey] = parseInt(item.paramValue);
           }
           if (isSetMaxV && item.paramKey == "prm_speed") {
             item.maxV = 160;
@@ -158,7 +199,7 @@ export default {
           });
           return;
         }
-        uni.setStorageSync("curDev", this.queryParams.devName);
+
         let tabData = data || this.pvList;
         // 遍历tabData，判断是否在updIdMap中，在就修改
         let keys = Object.keys(this.updIdMap);

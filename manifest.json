@@ -2,8 +2,8 @@
     "name" : "海川在线",
     "appid" : "__UNI__31266BE",
     "description" : "",
-    "versionName" : "1.1.2",
-    "versionCode" : 112,
+    "versionName" : "1.1.6",
+    "versionCode" : 116,
     "transformPx" : false,
     "app-plus" : {
         "usingComponents" : true,

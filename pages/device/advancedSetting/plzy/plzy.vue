@@ -1,8 +1,24 @@
 <template>
   <view>
-    <uni-forms v-if="pvList && pvList.length > 0" label-position="left" labelAlign="center" labelWidth="375upx">
-      <uni-forms-item style="margin-right: 10px;" v-for="(it,idx) in pvList" :key="idx" :name="it.paramName" :label="it.paramName">
-        <uni-easyinput class="inputCss" type="text" v-model="it.paramValue" @change="changeInput(it)" />
+    <uni-forms
+      v-if="pvList && pvList.length > 0"
+      label-position="left"
+      labelAlign="center"
+      labelWidth="375upx"
+    >
+      <uni-forms-item
+        style="margin-right: 10px"
+        v-for="(it, idx) in pvList"
+        :key="idx"
+        :name="it.paramName"
+        :label="it.paramName"
+      >
+        <uni-easyinput
+          class="inputCss"
+          type="text"
+          v-model="it.paramValue"
+          @change="changeInput(it)"
+        />
       </uni-forms-item>
     </uni-forms>
     <!-- 暂无数据页面 -->
@@ -11,7 +27,15 @@
     </view>
     <!-- // 保存按钮 -->
     <view class="btn-wrapper">
-      <button class="btn-wrapper-button" plain type="primary" @click="saveData()" :disabled="userModel == 1">保存</button>
+      <button
+        class="btn-wrapper-button"
+        plain
+        type="primary"
+        @click="saveData()"
+        :disabled="userModel == 1"
+      >
+        保存
+      </button>
     </view>
   </view>
 </template>
@@ -24,7 +48,7 @@ export default {
   data() {
     return {
       queryParams: {
-        devName: null,
+        devId: null,
         paramType: 1,
         paramSubType: 10,
       },
@@ -37,7 +61,7 @@ export default {
   onLoad(opt) {
     this.userModel = uni.getStorageSync("userModel");
     console.log(opt);
-    this.queryParams.devName = opt.devName;
+    this.queryParams.devId = uni.getStorageSync("devId");
     this.getList();
   },
   methods: {
@@ -133,7 +157,7 @@ export default {
           });
           return;
         }
-        uni.setStorageSync("curDev", this.queryParams.devName);
+
         let tabData = data || this.pvList;
         // 遍历tabData，判断是否在updIdMap中，在就修改
         let keys = Object.keys(this.updIdMap);

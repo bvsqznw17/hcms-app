@@ -2,12 +2,30 @@
   <view class="uni-container">
     <!-- 搜索框 -->
     <view>
-      <view :class="['weui-search-bar', inputShowed ? 'weui-search-bar_focusing' : '']" id="searchBar">
+      <view
+        :class="[
+          'weui-search-bar',
+          inputShowed ? 'weui-search-bar_focusing' : '',
+        ]"
+        id="searchBar"
+      >
         <form class="weui-search-bar__form">
           <view class="weui-search-bar__box">
             <i class="weui-icon-search"></i>
-            <input type="text" id="searchInput" class="weui-search-bar__input" placeholder="请输入ip地址" v-model="inputVal" :focus="inputShowed" @input="inputTyping" />
-            <span class="weui-icon-clear" v-if="inputVal.length > 0" @click="clearInput"></span>
+            <input
+              type="text"
+              id="searchInput"
+              class="weui-search-bar__input"
+              placeholder="请输入ip地址"
+              v-model="inputVal"
+              :focus="inputShowed"
+              @input="inputTyping"
+            />
+            <span
+              class="weui-icon-clear"
+              v-if="inputVal.length > 0"
+              @click="clearInput"
+            ></span>
           </view>
           <label class="weui-search-bar__label" @click="showInput">
             <i class="weui-icon-search"></i>
@@ -19,8 +37,12 @@
       <view class="weui-cells searchbar-result" v-if="inputVal.length > 0">
         <block v-for="(item, index) in searchList" :key="index">
           <view class="weui-cell weui-cell_active weui-cell_access">
-            <view @click="chooseRes" :data-ip="item.ip" class="weui-cell__bd weui-cell_primary">
-              <view>{{item.ip}}</view>
+            <view
+              @click="chooseRes"
+              :data-ip="item.ip"
+              class="weui-cell__bd weui-cell_primary"
+            >
+              <view>{{ item.ip }}</view>
             </view>
           </view>
         </block>
@@ -36,19 +58,22 @@
               <view class="dev-msg">
                 <view>
                   <text class="_label">设备名称：</text>
-                  <text style="">{{item.devName}}</text>
+                  <text style="">{{ item.devName }}</text>
                 </view>
                 <view>
                   <text class="_label">设备型号：</text>
-                  <text>{{item.devModel}}</text>
+                  <text>{{ item.devModel }}</text>
                 </view>
                 <view>
                   <text class="_label">当前版本：</text>
-                  <text>{{item.version}}</text>
+                  <text>{{ item.version }}</text>
                 </view>
                 <view>
                   <text class="_label">通信状态：</text>
-                  <text :style="{'color':(item.online ? '#13ce66' : '#e54d42')}">{{item.statusText}}</text>
+                  <text
+                    :style="{ color: item.online ? '#13ce66' : '#e54d42' }"
+                    >{{ item.statusText }}</text
+                  >
                 </view>
                 <!-- <view>
                   <text class="_label">当前语言：</text>
@@ -56,12 +81,14 @@
                 </view> -->
                 <view>
                   <text class="_label">更新时间：</text>
-                  <text>{{item.dtUpdate}}</text>
+                  <text>{{ item.dtUpdate }}</text>
                 </view>
               </view>
               <!-- 右侧 -->
               <view :id="index" :data-ip="item.ip" class="btns">
-                <view class="_btn" @click="btnDo('upgrade', item)">软件升级</view>
+                <view class="_btn" @click="btnDo('upgrade', item)"
+                  >软件升级</view
+                >
                 <!-- <view class="_btn" @click="btnDo('update', item)">语言更新</view> -->
               </view>
             </view>
@@ -69,13 +96,27 @@
         </view>
       </block>
     </view>
-    <uni-load-more :status="status" :icon-size="16" :content-text="contentText" />
+    <uni-load-more
+      :status="status"
+      :icon-size="16"
+      :content-text="contentText"
+    />
     <!-- 		<picker @change="bindPickerChange1" range-key="version" :range="versionList" id="pb1" ref="pb1">
 		</picker> -->
     <!-- 		<picker @change="bindPickerChange2" :range="languageList" ref="pb2">
 		</picker> -->
-    <pop-picker :dataList="versionList" :bindChange="bindPickerChange1" @confirm="confirmUp" ref="pb1"></pop-picker>
-    <pop-picker :dataList="languageList" :bindChange="bindPickerChange2" @confirm="confirmLan" ref="pb2"></pop-picker>
+    <pop-picker
+      :dataList="versionList"
+      :bindChange="bindPickerChange1"
+      @confirm="confirmUp"
+      ref="pb1"
+    ></pop-picker>
+    <pop-picker
+      :dataList="languageList"
+      :bindChange="bindPickerChange2"
+      @confirm="confirmLan"
+      ref="pb2"
+    ></pop-picker>
   </view>
 </template>
 
@@ -129,13 +170,14 @@ export default {
   },
   onLoad(opt) {
     // 获取devName和status
+    let devId = uni.getStorageSync("devId");
     let devName = uni.getStorageSync("devName");
     let status = uni.getStorageSync("status");
 
     this.userModel = uni.getStorageSync("userModel");
     // 设置在线状态
     this.online = status == "1" ? true : false;
-    this.queryParams.devName = devName;
+    this.queryParams.devId = devId;
     this.getList();
   },
   onShow() {
@@ -241,7 +283,6 @@ export default {
     },
     btnDo(code, item) {
       if (this.checkMonitor()) return;
-      uni.setStorageSync("curDev", item.devName);
       const type = code === "upgrade" ? "up" : "lan";
       listVersion({
         devModel: item.devModel,

@@ -45,7 +45,7 @@ export function readParam(query) {
 export function readParams(query) {
   return request({
     url: '/device/business/readParams',
-    method: 'post',
+    method: 'get',
     params: query,
     timeout: 10000
   })
@@ -85,6 +85,16 @@ export function getSysConfig(query) {
 export function getCmdResult(query) {
   return request({
     url: '/device/business/getCmdResult',
+    method: 'get',
+    params: query,
+    timeout: 20000
+  })
+}
+
+// 刷新一次redis缓存
+export function refreshCache(query) {
+  return request({
+    url: '/device/business/refreshCache',
     method: 'get',
     params: query,
     timeout: 10000
